@@ -1,5 +1,5 @@
 {{~#if properties~}}
-{
+{{#>isNullable}}{
 {{#each properties}}
 {{#ifdef description deprecated}}
 /**
@@ -12,12 +12,12 @@
  */
 {{/ifdef}}
 {{#if ../parent}}
-{{>isReadOnly}}{{{name}}}{{>isRequired}}: {{>type parent=../parent}};
+{{>isReadOnly}}{{{name}}}: {{#>isRequired}}{{>type parent=../parent}}{{/isRequired}};
 {{else}}
-{{>isReadOnly}}{{{name}}}{{>isRequired}}: {{>type}};
+{{>isReadOnly}}{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}};
 {{/if}}
 {{/each}}
-}{{>isNullable}}
+}{{/isNullable}}
 {{~else~}}
 any
 {{~/if~}}

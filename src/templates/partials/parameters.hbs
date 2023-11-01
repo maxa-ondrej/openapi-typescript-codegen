@@ -16,13 +16,13 @@
 {{/if}}
  */
 {{/ifdef}}
-{{{name}}}{{>isRequired}}: {{>type}},
+{{{name}}}{{#unless isRequired}}?{{else if default}}?{{/unless}}: {{>type}},
 {{/each}}
 }
 {{~else}}
 
 {{#each parameters}}
-{{{name}}}{{>isRequired}}: {{>type}}{{#if default}} = {{{default}}}{{/if}},
+{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}}{{#if default}} = {{{default}}}{{/if}},
 {{/each}}
 {{/if}}
 {{/if}}

@@ -1,6 +1,33 @@
-export const getResponseBody = (response: AxiosResponse<any>): any => {
+const createOptionProxy = <T>(value: T): O.Option<T> =>
+    value === undefined || value === null ? { '_tag': 'None' }
+        : new Proxy<O.Some<NonNullable<T>>>({
+            '_tag': 'Some',
+            value,
+        }, {
+            get: (target, prop) => {
+                if (prop === '_tag') {
+                    return target._tag;
+                }
+                if (prop === 'value') {
+                    return target.value;
+                }
+                const val = target.value[prop];
+                if (val === undefined || val === null) {
+                    return createOptionProxy(val);
+                }
+                return typeof val === 'function' ? val.bind(target.value) : val;
+            }
+        });
+
+const convertResponseBody = (body: unknown): any =>
+    body === undefined || body === null ? { '_tag': 'None' }
+        : typeof body === 'number' || typeof body === 'string' || typeof body === 'boolean' ? createOptionProxy(body)
+            : typeof body === 'object' ? createOptionProxy(Object.fromEntries(Object.entries(body).map(([key, value]) => [key, convertResponseBody(value)])))
+                : createOptionProxy(body);
+
+export const getResponseBody = <T>(response: HttpResponse<T>): T | undefined => {
 	if (response.status !== 204) {
-		return response.data;
+		return convertResponseBody(response.data);
 	}
-	return undefined;
+	return convertResponseBody(undefined);
 };

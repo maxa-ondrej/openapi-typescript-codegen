@@ -54,6 +54,32 @@ import type { OpenAPIConfig } from './OpenAPI';
 
 {{>functions/catchErrorCodes}}
 
+const flattenOption = (body: unknown): any =>
+    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
+    && (body._tag === 'None' || body._tag === 'Some')
+    ? body._tag === 'Some' && 'value' in body
+    ? body.value : undefined
+    : body;
+
+const convertRequestBody = (body: unknown): any =>
+    typeof body === 'object' && body !== null
+        ? (() => {
+            const flattened = flattenOption(body);
+            if (flattened === undefined) {
+                return undefined;
+            }
+            if (Array.isArray(flattened)) {
+                return flattened.map(value => convertRequestBody(value));
+            }
+            if (isBlob(flattened) || isFormData(flattened)) {
+                return flattened;
+            }
+            if (typeof flattened === 'object' && flattened !== null) {
+                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
+            }
+            return flattened;
+        })()
+        : body;
 
 /**
  * Request method
@@ -65,6 +91,7 @@ import type { OpenAPIConfig } from './OpenAPI';
 export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<T> => {
 	return new CancelablePromise(async (resolve, reject, onCancel) => {
 		try {
+			options = convertRequestBody(options);
 			const url = getUrl(config, options);
 			const formData = getFormData(options);
 			const body = getRequestBody(options);

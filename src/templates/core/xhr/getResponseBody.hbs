@@ -1,19 +1,46 @@
-export const getResponseBody = (xhr: XMLHttpRequest): any => {
-	if (xhr.status !== 204) {
+const createOptionProxy = <T>(value: T): O.Option<T> =>
+    value === undefined || value === null ? { '_tag': 'None' }
+        : new Proxy<O.Some<NonNullable<T>>>({
+            '_tag': 'Some',
+            value,
+        }, {
+            get: (target, prop) => {
+                if (prop === '_tag') {
+                    return target._tag;
+                }
+                if (prop === 'value') {
+                    return target.value;
+                }
+                const val = target.value[prop];
+                if (val === undefined || val === null) {
+                    return createOptionProxy(val);
+                }
+                return typeof val === 'function' ? val.bind(target.value) : val;
+            }
+        });
+
+const convertResponseBody = (body: unknown): any =>
+    body === undefined || body === null ? { '_tag': 'None' }
+        : typeof body === 'number' || typeof body === 'string' || typeof body === 'boolean' ? createOptionProxy(body)
+            : typeof body === 'object' ? createOptionProxy(Object.fromEntries(Object.entries(body).map(([key, value]) => [key, convertResponseBody(value)])))
+                : createOptionProxy(body);
+
+export const getResponseBody = async (response: Response): Promise<any> => {
+	if (response.status !== 204) {
 		try {
 			const contentType = xhr.getResponseHeader('Content-Type');
 			if (contentType) {
 				const jsonTypes = ['application/json', 'application/problem+json']
 				const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
 				if (isJSON) {
-					return JSON.parse(xhr.responseText);
+					return convertResponseBody(JSON.parse(xhr.responseText));
 				} else {
-					return xhr.responseText;
+					return convertResponseBody(xhr.responseText);
 				}
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	}
-	return undefined;
+	return convertResponseBody(undefined);
 };

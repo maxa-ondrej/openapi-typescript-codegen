@@ -11,6 +11,9 @@ import type { Observable } from 'rxjs';
 {{/if}}
 
 {{/equals}}
+import { either } from 'fp-ts';
+import type { Either } from 'fp-ts/Either';
+import type { ApiError } from '../core/ApiError';
 {{#if imports}}
 {{#each imports}}
 import type { {{{this}}} } from '../models/{{{this}}}';
@@ -75,7 +78,7 @@ export class {{{name}}}{{{@root.postfix}}} {
 	public {{{name}}}({{>parameters}}): Observable<{{>result}}> {
 		return this.httpRequest.request({
 	{{else}}
-	public {{{name}}}({{>parameters}}): CancelablePromise<{{>result}}> {
+	public {{{name}}}({{>parameters}}): CancelablePromise<Either<ApiError,{{>result}}>> {
 		return this.httpRequest.request({
 	{{/equals}}
 	{{else}}
@@ -83,7 +86,7 @@ export class {{{name}}}{{{@root.postfix}}} {
 	public {{{name}}}({{>parameters}}): Observable<{{>result}}> {
 		return __request(OpenAPI, this.http, {
 	{{else}}
-	public static {{{name}}}({{>parameters}}): CancelablePromise<{{>result}}> {
+	public static {{{name}}}({{>parameters}}): CancelablePromise<Either<ApiError,{{>result}}>> {
 		return __request(OpenAPI, {
 	{{/equals}}
 	{{/if}}
@@ -145,7 +148,7 @@ export class {{{name}}}{{{@root.postfix}}} {
 				{{/each}}
 			},
 			{{/if}}
-		});
+		}){{#equals @root.httpClient 'angular'}}{{else}}.then(either.right).catch(either.left) as CancelablePromise<Either<ApiError,{{>result}}>>{{/equals}};
 	}
 
 	{{/each}}
