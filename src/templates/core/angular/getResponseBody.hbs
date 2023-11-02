@@ -11,7 +11,7 @@ const createOptionProxy = <T>(value: T): O.Option<T> =>
                 if (prop === 'value') {
                     return target.value;
                 }
-                const val = target.value[prop];
+                const val = target.value[prop as keyof T];
                 if (val === undefined || val === null) {
                     return createOptionProxy(val);
                 }
