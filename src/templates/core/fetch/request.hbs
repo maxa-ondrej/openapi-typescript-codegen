@@ -88,7 +88,7 @@ const convertRequestBody = (body: unknown): any =>
  * @returns CancelablePromise<T>
  * @throws ApiError
  */
-export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<T> => {
+export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<readonly [T, number]> => {
 	return new CancelablePromise(async (resolve, reject, onCancel) => {
 		try {
 			options = convertRequestBody(options);
@@ -112,7 +112,7 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
 
 				catchErrorCodes(options, result);
 
-				resolve(result.body);
+				resolve([result.body, response.status] as const);
 			}
 		} catch (error) {
 			reject(error);

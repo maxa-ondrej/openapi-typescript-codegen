@@ -1,55 +1,19 @@
-type Loggable = {
-    toLog: () => unknown,
-    toString: () => string,
-}
-
-const none = { '_tag': 'None', toString () { return "undefined"; }, toLog () { return "undefined"; } } as const;
-
-const createOptionProxy = <T>(value: T): O.Option<T> & Loggable =>
-    value === undefined || value === null ? none
-        : new Proxy<O.Some<NonNullable<T>> & Loggable>({
-            '_tag': 'Some',
-            value,
-            toLog: () => value,
-            toString: () => value.toString(),
-        }, {
-            get: (target, prop) => {
-                if (prop === '_tag') {
-                    return target._tag;
-                }
-                if (prop === 'value') {
-                    return target.value;
-                }
-                const val = target.value[prop as keyof T];
-                if (val === undefined || val === null) {
-                    return createOptionProxy(val);
-                }
-                return typeof val === 'function' ? val.bind(target.value) : val;
-            }
-        });
-
-const convertResponseBody = (body: unknown): any =>
-    body === undefined || body === null ? none
-        : typeof body === 'number' || typeof body === 'string' || typeof body === 'boolean' ? createOptionProxy(body)
-            : typeof body === 'object' ? createOptionProxy({...Object.fromEntries(Object.entries(body).map(([key, value]) => [key, convertResponseBody(value)])), toString () { return JSON.stringify(body); }, toLog () { return body; }})
-                : createOptionProxy(body);
-
-export const getResponseBody = async (response: Response): Promise<any> => {
-	if (response.status !== 204) {
+export const getResponseBody = (xhr: XMLHttpRequest): any => {
+	if (xhr.status !== 204) {
 		try {
 			const contentType = xhr.getResponseHeader('Content-Type');
 			if (contentType) {
 				const jsonTypes = ['application/json', 'application/problem+json']
 				const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
 				if (isJSON) {
-					return convertResponseBody(JSON.parse(xhr.responseText));
+					return JSON.parse(xhr.responseText);
 				} else {
-					return convertResponseBody(xhr.responseText);
+					return xhr.responseText;
 				}
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	}
-	return convertResponseBody(undefined);
+	return undefined;
 };

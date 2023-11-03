@@ -1,0 +1,1 @@
+((result) => {{#>resultMapperIsNullable}}result.map({{~#if link~}}{{>resultMapper link}}{{~else~}}{{>resultMapperBase}}{{~/if~}}){{/resultMapperIsNullable}})

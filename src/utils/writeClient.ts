@@ -13,6 +13,7 @@ import { writeClientIndex } from './writeClientIndex';
 import { writeClientModels } from './writeClientModels';
 import { writeClientSchemas } from './writeClientSchemas';
 import { writeClientServices } from './writeClientServices';
+import { writeClientMappers } from './writeClientMappers';
 
 /**
  * Write our OpenAPI client, using the given templates at the given output
@@ -53,6 +54,7 @@ export const writeClient = async (
     const outputPath = resolve(process.cwd(), output);
     const outputPathCore = resolve(outputPath, 'core');
     const outputPathModels = resolve(outputPath, 'models');
+    const outputPathMappers = resolve(outputPath, 'mappers');
     const outputPathSchemas = resolve(outputPath, 'schemas');
     const outputPathServices = resolve(outputPath, 'services');
 
@@ -92,6 +94,12 @@ export const writeClient = async (
         await rmdir(outputPathModels);
         await mkdir(outputPathModels);
         await writeClientModels(client.models, templates, outputPathModels, httpClient, useUnionTypes, indent);
+    }
+
+    if (exportModels) {
+        await rmdir(outputPathMappers);
+        await mkdir(outputPathMappers);
+        await writeClientMappers(client.models, templates, outputPathMappers, httpClient, useUnionTypes, indent);
     }
 
     if (isDefined(clientName)) {

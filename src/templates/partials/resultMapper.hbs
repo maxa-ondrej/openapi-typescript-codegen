@@ -1,0 +1,19 @@
+{{#equals export 'interface'}}
+{{>resultMapperInterface}}
+{{else equals export 'reference'}}
+{{>resultMapperReference}}
+{{else equals export 'enum'}}
+{{>resultMapperEnum}}
+{{else equals export 'array'}}
+{{>resultMapperArray}}
+{{else equals export 'dictionary'}}
+{{>resultMapperDictionary}}
+{{else equals export 'one-of'}}
+{{>resultMapperUnion}}
+{{else equals export 'any-of'}}
+{{>resultMapperUnion}}
+{{else equals export 'all-of'}}
+{{>resultMapperIntersection}}
+{{else}}
+{{>resultMapperGeneric}}
+{{/equals}}

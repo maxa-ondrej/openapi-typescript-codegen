@@ -45,11 +45,3 @@ export { {{{name}}}{{{@root.postfixServices}}} } from './services/{{{name}}}{{{@
 {{/each}}
 {{/if}}
 {{/if}}
-
-const toLog = (d: unknown) => {
-    const fun = (d as any)?.toLog;
-	return typeof fun === 'function' ? fun() : d;
-};
-
-const oldLog = console.log;
-console.log = (...data: unknown[]) => oldLog(...data.map(toLog));

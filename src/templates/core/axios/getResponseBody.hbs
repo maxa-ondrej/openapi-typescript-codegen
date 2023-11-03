@@ -1,42 +1,6 @@
-type Loggable = {
-    toLog: () => unknown,
-    toString: () => string,
-}
-
-const none = { '_tag': 'None', toString () { return "undefined"; }, toLog () { return "undefined"; } } as const;
-
-const createOptionProxy = <T>(value: T): O.Option<T> & Loggable =>
-    value === undefined || value === null ? none
-        : new Proxy<O.Some<NonNullable<T>> & Loggable>({
-            '_tag': 'Some',
-            value,
-            toLog: () => value,
-            toString: () => value.toString(),
-        }, {
-            get: (target, prop) => {
-                if (prop === '_tag') {
-                    return target._tag;
-                }
-                if (prop === 'value') {
-                    return target.value;
-                }
-                const val = target.value[prop as keyof T];
-                if (val === undefined || val === null) {
-                    return createOptionProxy(val);
-                }
-                return typeof val === 'function' ? val.bind(target.value) : val;
-            }
-        });
-
-const convertResponseBody = (body: unknown): any =>
-    body === undefined || body === null ? none
-        : typeof body === 'number' || typeof body === 'string' || typeof body === 'boolean' ? createOptionProxy(body)
-            : typeof body === 'object' ? createOptionProxy({...Object.fromEntries(Object.entries(body).map(([key, value]) => [key, convertResponseBody(value)])), toString () { return JSON.stringify(body); }, toLog () { return body; }})
-                : createOptionProxy(body);
-
-export const getResponseBody = <T>(response: HttpResponse<T>): T | undefined => {
+export const getResponseBody = (response: AxiosResponse<any>): any => {
 	if (response.status !== 204) {
-		return convertResponseBody(response.data);
+		return response.data;
 	}
-	return convertResponseBody(undefined);
+	return undefined;
 };
