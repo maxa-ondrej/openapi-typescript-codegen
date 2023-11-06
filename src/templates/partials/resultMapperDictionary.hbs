@@ -1,4 +1,0 @@
-((result) => {{#>resultMapperIsNullable}}{{~#if link~}}Object.fromEntries(
-Object.entries(result)
-	.map(([key, value]) => [key, {{~#if link~}}{{>resultMapper link}}{{~else~}}{{>resultMapperBase}}{{~/if~}}(value)] as const)
-){{~else~}}result{{~/if~}}{{/resultMapperIsNullable}})

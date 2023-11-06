@@ -1,18 +1,13 @@
 {{>header}}
 
-import { either } from 'fp-ts';
-import type { Either } from 'fp-ts/lib/Either';
-import type { ApiError } from '../core/ApiError';
+import * as D from '@majkit/fp-ts-schema';
+import { option } from 'fp-ts';
 {{#if imports}}
 {{#each imports}}
-import type { {{{this}}} } from '../models/{{{this}}}';
-{{/each}}
-{{#each imports}}
-import { {{{this}}}Mapper } from '../mappers/{{{this}}}Mapper';
+import { {{{this}}} } from '../models/{{{this}}}';
 {{/each}}
 
 {{/if}}
-import type { CancelablePromise } from '../core/CancelablePromise';
 {{#if @root.exportClient}}
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 {{else}}
@@ -27,32 +22,20 @@ export class {{{name}}}{{{@root.postfix}}} {
 	{{/if}}
 
 	{{#each operations}}
-	/**
-	{{#if deprecated}}
-	 * @deprecated
-	{{/if}}
-	{{#if summary}}
-	 * {{{escapeComment summary}}}
-	{{/if}}
-	{{#if description}}
-	 * {{{escapeComment description}}}
-	{{/if}}
-	{{#unless @root.useOptions}}
+
 	{{#if parameters}}
+	private static {{{name}}}Decoder = D.object({
 	{{#each parameters}}
-	 * @param {{{name}}} {{#if description}}{{{escapeComment description}}}{{/if}}
+	{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}},
 	{{/each}}
+	});
 	{{/if}}
-	{{/unless}}
-	{{#each results}}
-	 * @returns Either<ApiError,{{{type}}}> {{#if description}}{{{escapeComment description}}}{{/if}}
-	{{/each}}
-	 */
+
 	{{#if @root.exportClient}}
-	public {{{name}}}({{>parameters}}): CancelablePromise<Either<ApiError,{{>result}}>> {
+	public {{{name}}}({{>parameters}}) {
 		return this.httpRequest.request({
 	{{else}}
-	public static {{{name}}}({{>parameters}}): CancelablePromise<Either<ApiError,{{>result}}>> {
+	public static {{{name}}}({{>parameters}}) {
 		return __request(OpenAPI, {
 	{{/if}}
 			method: '{{{method}}}',
@@ -106,6 +89,13 @@ export class {{{name}}}{{{@root.postfix}}} {
 			{{#if responseHeader}}
 			responseHeader: '{{{responseHeader}}}',
 			{{/if}}
+			{{~#if results~}}
+			responseDecoders: {
+				{{#each results}}
+					{{{code}}}: {{>type}},
+				{{/each}}
+			},
+			{{~/if~}}
 			{{#if errors}}
 			errors: {
 				{{#each errors}}
@@ -113,18 +103,7 @@ export class {{{name}}}{{{@root.postfix}}} {
 				{{/each}}
 			},
 			{{/if}}
-		}){{~#if results~}}
-			.then(([r, code]) => {
-				{{#each results}}
-					if ({{{code}}} === code) {
-						return {{>resultMapper}}(r);
-					}
-				{{/each}}
-				return r as never;
-			})
-			{{~/if~}}
-			.then(either.right)
-			.catch(either.left) as CancelablePromise<Either<ApiError,{{>result}}>>;
+		});
 	}
 
 	{{/each}}

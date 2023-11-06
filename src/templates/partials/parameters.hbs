@@ -2,27 +2,13 @@
 {{#if @root.useOptions~}}
 {
 {{#each parameters}}
-{{{name}}}{{#if default}} = O.some({{{default}}}){{else}}{{#unless isRequired}} = O.none{{/unless}}{{/if}},
+{{{name}}}{{#if default}} = option.some({{{default}}}){{else}}{{#unless isRequired}} = option.none{{/unless}}{{/if}},
 {{/each}}
-}: {
-{{#each parameters}}
-{{#ifdef description deprecated}}
-/**
-{{#if description}}
- * {{{escapeComment description}}}
-{{/if}}
-{{#if deprecated}}
- * @deprecated
-{{/if}}
- */
-{{/ifdef}}
-{{{name}}}{{#unless isRequired}}?{{/unless}}: {{#>isRequired}}{{>type}}{{/isRequired}},
-{{/each}}
-}
+}: D.Output<typeof this.{{{name}}}Decoder>
 {{~else}}
 
 {{#each parameters}}
-{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}}{{#if default}} = O.some({{{default}}}){{else}}{{#unless isRequired}} = O.none{{/unless}}{{/if}},
+{{{name}}}: D.Output<typeof this.{{{../name}}}Decoder>['{{{name}}}']{{#if default}} = option.some({{{default}}}){{else}}{{#unless isRequired}} = option.none{{/unless}}{{/if}},
 {{/each}}
 {{/if}}
 {{/if}}

@@ -38,10 +38,9 @@ $ openapi --help
     -V, --version             output the version number
     -i, --input <value>       OpenAPI specification, can be a path, url or string content (required)
     -o, --output <value>      Output directory (required)
-    -c, --client <value>      HTTP client to generate [fetch, xhr, node, axios, angular] (default: "fetch")
+    -c, --client <value>      HTTP client to generate [fetch, xhr, node, axios] (default: "fetch")
     --name <value>            Custom client class name
     --useOptions              Use options instead of arguments
-    --useUnionTypes           Use union types instead of enums
     --exportCore <value>      Write core files to disk (default: true)
     --exportServices <value>  Write services to disk (default: true)
     --exportModels <value>    Write models to disk (default: true)
@@ -78,7 +77,6 @@ Documentation
 - [OpenAPI object](docs/openapi-object.md)
 - [Client instances](docs/client-instances.md) `--name`
 - [Argument vs. Object style](docs/arguments-vs-object-style.md) `--useOptions`
-- [Enums vs. Union types](docs/enum-vs-union-types.md) `--useUnionTypes`
 - [Runtime schemas](docs/runtime-schemas.md) `--exportSchemas`
 - [Enum with custom names and descriptions](docs/custom-enums.md)
 - [Nullable props (OpenAPI v2)](docs/nullable-props.md)
@@ -91,7 +89,6 @@ Support
 ===
 - [Babel support](docs/babel-support.md)
 - [Axios support](docs/axios-support.md)
-- [Angular support](docs/angular-support.md)
 - [Node-Fetch support](docs/node-fetch-support.md)
 
 [npm-url]: https://npmjs.org/package/openapi-typescript-codegen

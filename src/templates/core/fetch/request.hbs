@@ -1,11 +1,13 @@
 {{>header}}
 
 import { ApiError } from './ApiError';
-import type { ApiRequestOptions } from './ApiRequestOptions';
+import type { ApiRequestOptions, ApiResponse } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
 import { CancelablePromise } from './CancelablePromise';
 import type { OnCancel } from './CancelablePromise';
 import type { OpenAPIConfig } from './OpenAPI';
+import type * as D from '@majkit/fp-ts-schema';
+import type { Either } from 'fp-ts/lib/Either';
 
 {{>functions/isDefined}}
 
@@ -88,7 +90,7 @@ const convertRequestBody = (body: unknown): any =>
  * @returns CancelablePromise<T>
  * @throws ApiError
  */
-export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<readonly [T, number]> => {
+export const request = <T extends Record<number,D.Decoder<any>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
 	return new CancelablePromise(async (resolve, reject, onCancel) => {
 		try {
 			options = convertRequestBody(options);

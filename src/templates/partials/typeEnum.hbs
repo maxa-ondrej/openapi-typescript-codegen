@@ -1,1 +1,1 @@
-{{#>isNullable}}{{#enumerator enum parent name}}{{this}}{{/enumerator}}{{/isNullable}}
+{{#>isNullable}}D.literalUnion({{#each enum}}{{{value}}}{{#unless @last}}, {{/unless}}{{/each}}){{/isNullable}}

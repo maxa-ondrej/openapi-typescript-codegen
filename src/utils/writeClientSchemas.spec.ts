@@ -39,7 +39,6 @@ describe('writeClientSchemas', () => {
                 model: () => 'model',
                 schema: () => 'schema',
                 service: () => 'service',
-                mapper: () => 'mapper',
             },
             core: {
                 settings: () => 'settings',

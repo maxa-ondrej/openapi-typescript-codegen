@@ -75,10 +75,20 @@ export const getOperation = (
         operation.errors = getOperationErrors(operationResponses);
         operation.responseHeader = getOperationResponseHeader(operationResults);
 
-        operationResults.forEach(operationResult => {
-            operation.results.push(operationResult);
-            operation.imports.push(...operationResult.imports);
-        });
+        const types = {
+            'application/json': 1,
+            'x-www-form-urlencoded': 2,
+            'application/xml': 3,
+        } as const;
+
+        operationResults
+            .sort((a, b) => (types[a.type as keyof typeof types] ?? 4) - (types[b.type as keyof typeof types] ?? 4))
+            .filter(($, i1, arr) => arr.filter(({ code }, i2) => i1 > i2 && code === $.code).length === 0)
+            .sort((a, b) => a.code - b.code)
+            .forEach(operationResult => {
+                operation.results.push(operationResult);
+                operation.imports.push(...operationResult.imports);
+            });
     }
 
     operation.parameters = operation.parameters.sort(sortByRequired);

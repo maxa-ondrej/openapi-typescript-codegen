@@ -49,7 +49,6 @@ import xhrSendRequest from '../templates/core/xhr/sendRequest.hbs';
 import templateExportModel from '../templates/exportModel.hbs';
 import templateExportSchema from '../templates/exportSchema.hbs';
 import templateExportService from '../templates/exportService.hbs';
-import templateExportMapper from '../templates/exportMapper.hbs';
 import templateIndex from '../templates/index.hbs';
 import partialBase from '../templates/partials/base.hbs';
 import partialExportComposition from '../templates/partials/exportComposition.hbs';
@@ -62,18 +61,6 @@ import partialIsReadOnly from '../templates/partials/isReadOnly.hbs';
 import partialIsRequired from '../templates/partials/isRequired.hbs';
 import partialParameters from '../templates/partials/parameters.hbs';
 import partialResult from '../templates/partials/result.hbs';
-import partialResultMapper from '../templates/partials/resultMapper.hbs';
-import partialResultMapperBase from '../templates/partials/resultMapperBase.hbs';
-import partialResultMapperArray from '../templates/partials/resultMapperArray.hbs';
-import partialResultMapperDictionary from '../templates/partials/resultMapperDictionary.hbs';
-import partialResultMapperEnum from '../templates/partials/resultMapperEnum.hbs';
-import partialResultMapperGeneric from '../templates/partials/resultMapperGeneric.hbs';
-import partialResultMapperInterface from '../templates/partials/resultMapperInterface.hbs';
-import partialResultMapperIntersection from '../templates/partials/resultMapperIntersection.hbs';
-import partialResultMapperReference from '../templates/partials/resultMapperReference.hbs';
-import partialResultMapperUnion from '../templates/partials/resultMapperUnion.hbs';
-import partialResultMapperIsRequired from '../templates/partials/resultMapperIsRequired.hbs';
-import partialResultMapperIsNullable from '../templates/partials/resultMapperIsNullable.hbs';
 import partialSchema from '../templates/partials/schema.hbs';
 import partialSchemaArray from '../templates/partials/schemaArray.hbs';
 import partialSchemaComposition from '../templates/partials/schemaComposition.hbs';
@@ -99,7 +86,6 @@ export interface Templates {
         model: Handlebars.TemplateDelegate;
         schema: Handlebars.TemplateDelegate;
         service: Handlebars.TemplateDelegate;
-        mapper: Handlebars.TemplateDelegate;
     };
     core: {
         settings: Handlebars.TemplateDelegate;
@@ -132,7 +118,6 @@ export const registerHandlebarTemplates = (root: {
             model: Handlebars.template(templateExportModel),
             schema: Handlebars.template(templateExportSchema),
             service: Handlebars.template(templateExportService),
-            mapper: Handlebars.template(templateExportMapper),
         },
         core: {
             settings: Handlebars.template(templateCoreSettings),
@@ -157,18 +142,6 @@ export const registerHandlebarTemplates = (root: {
     Handlebars.registerPartial('isRequired', Handlebars.template(partialIsRequired));
     Handlebars.registerPartial('parameters', Handlebars.template(partialParameters));
     Handlebars.registerPartial('result', Handlebars.template(partialResult));
-    Handlebars.registerPartial('resultMapper', Handlebars.template(partialResultMapper));
-    Handlebars.registerPartial('resultMapperBase', Handlebars.template(partialResultMapperBase));
-    Handlebars.registerPartial('resultMapperArray', Handlebars.template(partialResultMapperArray));
-    Handlebars.registerPartial('resultMapperDictionary', Handlebars.template(partialResultMapperDictionary));
-    Handlebars.registerPartial('resultMapperEnum', Handlebars.template(partialResultMapperEnum));
-    Handlebars.registerPartial('resultMapperGeneric', Handlebars.template(partialResultMapperGeneric));
-    Handlebars.registerPartial('resultMapperInterface', Handlebars.template(partialResultMapperInterface));
-    Handlebars.registerPartial('resultMapperIntersection', Handlebars.template(partialResultMapperIntersection));
-    Handlebars.registerPartial('resultMapperReference', Handlebars.template(partialResultMapperReference));
-    Handlebars.registerPartial('resultMapperUnion', Handlebars.template(partialResultMapperUnion));
-    Handlebars.registerPartial('resultMapperIsNullable', Handlebars.template(partialResultMapperIsNullable));
-    Handlebars.registerPartial('resultMapperIsRequired', Handlebars.template(partialResultMapperIsRequired));
     Handlebars.registerPartial('schema', Handlebars.template(partialSchema));
     Handlebars.registerPartial('schemaArray', Handlebars.template(partialSchemaArray));
     Handlebars.registerPartial('schemaDictionary', Handlebars.template(partialSchemaDictionary));

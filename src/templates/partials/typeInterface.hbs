@@ -1,23 +1,13 @@
 {{~#if properties~}}
 {{#>isNullable}}
-{{#each properties}}
-{{#ifdef description deprecated}}
-/**
-{{#if description}}
- * {{{escapeComment description}}}
-{{/if}}
-{{#if deprecated}}
- * @deprecated
-{{/if}}
- */
-{{/ifdef}}
-{{#if ../parent}}
-{{>isReadOnly}}{{{name}}}: {{#>isRequired}}{{>type parent=../parent}}{{/isRequired}};
-{{else}}
-{{>isReadOnly}}{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}};
-{{/if}}
-{{/each}}
+D.object({
+	{{#each properties}}
+	{{{name}}}: {{#>isRequired}}{{#if ../parent}}{{>type parent=../parent}}{{else}}{{>type}}{{/if}}{{/isRequired}},
+	{{/each}}
+})
 {{/isNullable}}
 {{~else~}}
-unknown
+D.createDecoder<unknown>({
+	forceDecode: (data) => data,
+})
 {{~/if~}}

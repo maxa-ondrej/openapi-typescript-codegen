@@ -1,9 +1,34 @@
 {{~#equals base 'binary'~}}
-{{~#equals @root.httpClient 'fetch'}}Blob{{/equals~}}
-{{~#equals @root.httpClient 'xhr'}}Blob{{/equals~}}
-{{~#equals @root.httpClient 'axios'}}Blob{{/equals~}}
-{{~#equals @root.httpClient 'angular'}}Blob{{/equals~}}
-{{~#equals @root.httpClient 'node'}}Blob{{/equals~}}
+D.createDecoder<Blob>({
+	forceDecode: (data) => {
+		if (data instanceof Blob) {
+			return data;
+		}
+		throw new D.DecoderError('Expected Blob');
+	},
+})
+{{~else equals base 'number'~}}
+D.number
+{{~else equals base 'string'~}}
+D.string
+{{~else equals base 'void'~}}
+D.succeed<void>(undefined)
+{{~else equals base 'any'~}}
+D.createDecoder<unknown>({
+	forceDecode: (data) => data,
+})
+{{~else equals base 'date'~}}
+D.createDecoder<Date>({
+	forceDecode: (data) => {
+		const result = D.string.decode(data);
+		if (either.isLeft(result)) throw result.left;
+		const date = new Date(result.right);
+		if (isNaN(date)) throw new D.DecoderError('${result.right} is not a valid date');
+		return date;
+	},
+})
+{{~else equals base 'boolean'~}}
+D.boolean
 {{~else~}}
 {{{base}}}
 {{~/equals~}}
