@@ -1,1 +1,9 @@
-{{#>isNullable}}D.record({{~#if link~}}{{>type link}}{{~else~}}{{>base}}{{~/if~}}){{/isNullable}}
+{{#>isNullable~}}
+D.record(
+	{{~#if link~}}
+		{{~>type link~}}
+	{{~else~}}
+		{{~>base~}}
+	{{~/if~}}
+)
+{{~/isNullable}}

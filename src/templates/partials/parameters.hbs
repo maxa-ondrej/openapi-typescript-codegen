@@ -2,13 +2,19 @@
 {{#if @root.useOptions~}}
 {
 {{#each parameters}}
-{{{name}}}{{#if default}} = option.some({{{default}}}){{else}}{{#unless isRequired}} = option.none{{/unless}}{{/if}},
+{{{name}}}{{#if default}} = option.some({{{default}}})
+{{~else~}}
+	{{~#unless isRequired}} = option.none{{/unless~}}
+{{~/if}},
 {{/each}}
 }: D.Output<typeof this.{{{name}}}Decoder>
 {{~else}}
 
 {{#each parameters}}
-{{{name}}}: D.Output<typeof this.{{{../name}}}Decoder>['{{{name}}}']{{#if default}} = option.some({{{default}}}){{else}}{{#unless isRequired}} = option.none{{/unless}}{{/if}},
+{{{name}}}: D.Output<typeof this.{{{../name}}}Decoder>['{{{name}}}']{{#if default}} = {{{default}}}
+	{{~else~}}
+	{{~#unless isRequired}} = option.none{{/unless~}}
+{{~/if}},
 {{/each}}
 {{/if}}
 {{/if}}

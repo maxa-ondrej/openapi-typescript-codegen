@@ -1,1 +1,5 @@
-{{#if isNullable}}D.nullable({{> @partial-block }}){{else}}{{> @partial-block }}{{/if}}
+{{#if isNullable~}}
+D.nullable({{> @partial-block }})
+{{~else~}}
+{{> @partial-block }}
+{{~/if}}

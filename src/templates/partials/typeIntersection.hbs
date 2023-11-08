@@ -1,1 +1,8 @@
-{{#>isNullable}}D.allOf({{#each properties}}{{>type}}{{#unless @last}}, {{/unless}}{{/each}}){{/isNullable}}
+{{#>isNullable~}}
+D.allOf(
+	{{~#each properties~}}
+		{{~>type~}}
+		{{~#unless @last~}}, {{/unless~}}
+	{{~/each~}}
+)
+{{~/isNullable}}

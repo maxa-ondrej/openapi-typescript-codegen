@@ -70,7 +70,9 @@
                         "in": "formData",
                         "description": "Additional data to pass to server",
                         "required": false,
-                        "type": "string"
+                        "type": "string",
+                        "x-nullable": true,
+                        "default": null
                     },
                     {
                         "name": "file",
@@ -81,7 +83,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "default": {
                         "description": "successful operation",
                         "schema": {
                             "$ref": "#/definitions/ApiResponse"

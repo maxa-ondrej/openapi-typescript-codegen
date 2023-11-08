@@ -1,1 +1,9 @@
-{{#>isNullable}}D.array({{~#if link~}}{{>type link}}{{~else~}}{{>base}}{{~/if~}}){{/isNullable}}
+{{#>isNullable~}}
+D.array(
+	{{~#if link~}}
+		{{~>type link~}}
+	{{~else~}}
+		{{~>base~}}
+	{{~/if~}}
+)
+{{~/isNullable}}

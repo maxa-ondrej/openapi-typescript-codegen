@@ -21,7 +21,6 @@ import { writeClientServices } from './writeClientServices';
  * @param output The relative location of the output directory
  * @param httpClient The selected httpClient (fetch, xhr, node or axios)
  * @param useOptions Use options or arguments functions
- * @param useUnionTypes Use union types instead of enums
  * @param exportCore Generate core client classes
  * @param exportServices Generate services
  * @param exportModels Generate models
@@ -39,7 +38,6 @@ export const writeClient = async (
     output: string,
     httpClient: HttpClient,
     useOptions: boolean,
-    useUnionTypes: boolean,
     exportCore: boolean,
     exportServices: boolean,
     exportModels: boolean,
@@ -74,7 +72,6 @@ export const writeClient = async (
             templates,
             outputPathServices,
             httpClient,
-            useUnionTypes,
             useOptions,
             indent,
             postfixServices,
@@ -85,13 +82,13 @@ export const writeClient = async (
     if (exportSchemas) {
         await rmdir(outputPathSchemas);
         await mkdir(outputPathSchemas);
-        await writeClientSchemas(client.models, templates, outputPathSchemas, httpClient, useUnionTypes, indent);
+        await writeClientSchemas(client.models, templates, outputPathSchemas, httpClient, indent);
     }
 
     if (exportModels) {
         await rmdir(outputPathModels);
         await mkdir(outputPathModels);
-        await writeClientModels(client.models, templates, outputPathModels, httpClient, useUnionTypes, indent);
+        await writeClientModels(client.models, templates, outputPathModels, httpClient, indent);
     }
 
     if (isDefined(clientName)) {
@@ -105,7 +102,6 @@ export const writeClient = async (
             client,
             templates,
             outputPath,
-            useUnionTypes,
             exportCore,
             exportServices,
             exportModels,

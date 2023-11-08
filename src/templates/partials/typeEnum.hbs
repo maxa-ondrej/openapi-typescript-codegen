@@ -1,1 +1,8 @@
-{{#>isNullable}}D.literalUnion({{#each enum}}{{{value}}}{{#unless @last}}, {{/unless}}{{/each}}){{/isNullable}}
+{{#>isNullable~}}
+D.literalUnion(
+	{{~#each enum~}}
+		{{{value}}}
+		{{~#unless @last~}}, {{/unless~}}
+	{{~/each~}}
+)
+{{~/isNullable}}

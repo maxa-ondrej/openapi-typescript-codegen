@@ -5,7 +5,7 @@ import type * as D from '@majkit/fp-ts-schema';
 export type ApiResponse<T extends Record<number,D.Decoder<any>>> = {
 	[key in keyof T]: {
 		readonly status: key;
-		readonly body: D.Output<T[key]>;
+		readonly body: key extends number ? D.Output<T[key]> : never;
 	};
 }[keyof T];
 

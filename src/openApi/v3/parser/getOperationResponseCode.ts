@@ -1,7 +1,7 @@
 export const getOperationResponseCode = (value: string | 'default'): number | null => {
-    // You can specify a "default" response, this is treated as HTTP code 200
+    // You can specify a "default" response
     if (value === 'default') {
-        return 200;
+        return 0;
     }
 
     // Check if we can parse the code and return of successful.

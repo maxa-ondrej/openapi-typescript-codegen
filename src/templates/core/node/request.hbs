@@ -6,11 +6,12 @@ import type { RequestInit, Response } from 'node-fetch';
 import type { AbortSignal } from 'node-fetch/externals';
 
 import { ApiError } from './ApiError';
-import type { ApiRequestOptions } from './ApiRequestOptions';
+import type { ApiRequestOptions, ApiResponse } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
 import { CancelablePromise } from './CancelablePromise';
 import type { OnCancel } from './CancelablePromise';
 import type { OpenAPIConfig } from './OpenAPI';
+import { either } from 'fp-ts';
 
 {{>functions/isDefined}}
 
@@ -90,10 +91,8 @@ const convertRequestBody = (body: unknown): any =>
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
- * @returns CancelablePromise<T>
- * @throws ApiError
  */
-export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<readonly [T, number]> => {
+export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions<T>): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
 	return new CancelablePromise(async (resolve, reject, onCancel) => {
 		try {
 			options = convertRequestBody(options);
@@ -117,10 +116,10 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
 
 				catchErrorCodes(options, result);
 
-				resolve([result.body, response.status] as const);
+				resolve(options.responseDecoders[response.status].decode(result.body));
 			}
 		} catch (error) {
-			reject(error);
+			resolve(either.left(error as ApiError));
 		}
 	});
 };

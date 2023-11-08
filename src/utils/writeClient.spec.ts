@@ -42,7 +42,6 @@ describe('writeClient', () => {
             './dist',
             HttpClient.FETCH,
             false,
-            false,
             true,
             true,
             true,

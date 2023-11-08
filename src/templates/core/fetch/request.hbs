@@ -7,6 +7,7 @@ import { CancelablePromise } from './CancelablePromise';
 import type { OnCancel } from './CancelablePromise';
 import type { OpenAPIConfig } from './OpenAPI';
 import type * as D from '@majkit/fp-ts-schema';
+import { either } from 'fp-ts';
 import type { Either } from 'fp-ts/lib/Either';
 
 {{>functions/isDefined}}
@@ -87,8 +88,6 @@ const convertRequestBody = (body: unknown): any =>
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
- * @returns CancelablePromise<T>
- * @throws ApiError
  */
 export const request = <T extends Record<number,D.Decoder<any>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
 	return new CancelablePromise(async (resolve, reject, onCancel) => {
@@ -114,10 +113,10 @@ export const request = <T extends Record<number,D.Decoder<any>>>(config: OpenAPI
 
 				catchErrorCodes(options, result);
 
-				resolve([result.body, response.status] as const);
+				resolve(options.responseDecoders[response.status].decode(result.body));
 			}
 		} catch (error) {
-			reject(error);
+			resolve(either.left(error as ApiError));
 		}
 	});
 };

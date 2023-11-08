@@ -8,9 +8,8 @@ export const getOperationParameterDefault = (
     if (parameter.default === undefined) {
         return undefined;
     }
-
     if (parameter.default === null) {
-        return 'null';
+        return 'option.none';
     }
 
     const type = parameter.type || typeof parameter.default;

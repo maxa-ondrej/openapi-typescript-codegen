@@ -1,11 +1,17 @@
 {{~#if properties~}}
-{{#>isNullable}}
+{{#>isNullable~}}
 D.object({
-	{{#each properties}}
-	{{{name}}}: {{#>isRequired}}{{#if ../parent}}{{>type parent=../parent}}{{else}}{{>type}}{{/if}}{{/isRequired}},
-	{{/each}}
+{{#each properties}}
+	{{{name}}}: {{#>isRequired}}
+		{{~#if ../parent~}}
+			{{~>type parent=../parent}}
+		{{~else~}}
+			{{~>type}}
+		{{~/if~}}
+	{{~/isRequired}},
+{{/each}}
 })
-{{/isNullable}}
+{{~/isNullable}}
 {{~else~}}
 D.createDecoder<unknown>({
 	forceDecode: (data) => data,

@@ -51,10 +51,6 @@ import templateExportSchema from '../templates/exportSchema.hbs';
 import templateExportService from '../templates/exportService.hbs';
 import templateIndex from '../templates/index.hbs';
 import partialBase from '../templates/partials/base.hbs';
-import partialExportComposition from '../templates/partials/exportComposition.hbs';
-import partialExportEnum from '../templates/partials/exportEnum.hbs';
-import partialExportInterface from '../templates/partials/exportInterface.hbs';
-import partialExportType from '../templates/partials/exportType.hbs';
 import partialHeader from '../templates/partials/header.hbs';
 import partialIsNullable from '../templates/partials/isNullable.hbs';
 import partialIsReadOnly from '../templates/partials/isReadOnly.hbs';
@@ -106,7 +102,6 @@ export interface Templates {
 export const registerHandlebarTemplates = (root: {
     httpClient: HttpClient;
     useOptions: boolean;
-    useUnionTypes: boolean;
 }): Templates => {
     registerHandlebarHelpers(root);
 
@@ -132,10 +127,6 @@ export const registerHandlebarTemplates = (root: {
     };
 
     // Partials for the generations of the models, services, etc.
-    Handlebars.registerPartial('exportEnum', Handlebars.template(partialExportEnum));
-    Handlebars.registerPartial('exportInterface', Handlebars.template(partialExportInterface));
-    Handlebars.registerPartial('exportComposition', Handlebars.template(partialExportComposition));
-    Handlebars.registerPartial('exportType', Handlebars.template(partialExportType));
     Handlebars.registerPartial('header', Handlebars.template(partialHeader));
     Handlebars.registerPartial('isNullable', Handlebars.template(partialIsNullable));
     Handlebars.registerPartial('isReadOnly', Handlebars.template(partialIsReadOnly));

@@ -1114,7 +1114,8 @@
         },
         "Date": {
             "description": "This is a type-only model that defines Date as a string",
-            "type": "string"
+            "type": "string",
+            "format": "string"
         },
         "ModelWithInteger": {
             "description": "This is a model with one number property",

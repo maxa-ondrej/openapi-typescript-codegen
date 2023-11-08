@@ -25,9 +25,15 @@ export class {{{name}}}{{{@root.postfix}}} {
 
 	{{#if parameters}}
 	private static {{{name}}}Decoder = D.object({
+	{{#if @root.useOptions~}}
 	{{#each parameters}}
 	{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}},
 	{{/each}}
+	{{~else}}
+	{{#each parameters}}
+	{{{name}}}: {{#unless isRequired}}{{#unless default}}D.optional({{>type}}){{else}}{{>type}}{{/unless}}{{else}}{{>type}}{{/unless}},
+	{{/each}}
+	{{/if}}
 	});
 	{{/if}}
 
@@ -89,13 +95,13 @@ export class {{{name}}}{{{@root.postfix}}} {
 			{{#if responseHeader}}
 			responseHeader: '{{{responseHeader}}}',
 			{{/if}}
-			{{~#if results~}}
+			{{#if results}}
 			responseDecoders: {
 				{{#each results}}
-					{{{code}}}: {{>type}},
+				{{{code}}}: {{>type}},
 				{{/each}}
 			},
-			{{~/if~}}
+			{{/if}}
 			{{#if errors}}
 			errors: {
 				{{#each errors}}

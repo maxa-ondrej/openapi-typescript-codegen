@@ -2,15 +2,16 @@
 
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
+import type * as D from '@majkit/fp-ts-schema';
 
-export class ApiError extends Error {
+export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
 	public readonly url: string;
 	public readonly status: number;
 	public readonly statusText: string;
 	public readonly body: any;
-	public readonly request: ApiRequestOptions;
+	public readonly request: ApiRequestOptions<T>;
 
-	constructor(request: ApiRequestOptions, response: ApiResult, message: string) {
+	constructor(request: ApiRequestOptions<T>, response: ApiResult, message: string) {
 		super(message);
 
 		this.name = 'ApiError';

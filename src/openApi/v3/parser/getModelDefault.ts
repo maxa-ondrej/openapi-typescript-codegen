@@ -5,9 +5,8 @@ export const getModelDefault = (definition: OpenApiSchema, model?: Model): strin
     if (definition.default === undefined) {
         return undefined;
     }
-
     if (definition.default === null) {
-        return 'null';
+        return 'option.none';
     }
 
     const type = definition.type || typeof definition.default;
