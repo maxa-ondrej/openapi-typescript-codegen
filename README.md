@@ -24,7 +24,7 @@
 ## Install
 
 ```
-npm install openapi-typescript-codegen --save-dev
+pnpm install @majkit/openapi -D
 ```
 
 ## Usage
@@ -91,13 +91,13 @@ Support
 - [Axios support](docs/axios-support.md)
 - [Node-Fetch support](docs/node-fetch-support.md)
 
-[npm-url]: https://npmjs.org/package/openapi-typescript-codegen
-[npm-image]: https://img.shields.io/npm/v/openapi-typescript-codegen.svg
+[npm-url]: https://npmjs.org/package/@majkit/openapi
+[npm-image]: https://img.shields.io/npm/v/@majkit/openapi.svg
 [license-url]: LICENSE
-[license-image]: http://img.shields.io/npm/l/openapi-typescript-codegen.svg
-[coverage-url]: https://codecov.io/gh/ferdikoomen/openapi-typescript-codegen
-[coverage-image]: https://img.shields.io/codecov/c/github/ferdikoomen/openapi-typescript-codegen.svg
-[downloads-url]: http://npm-stat.com/charts.html?package=openapi-typescript-codegen
-[downloads-image]: http://img.shields.io/npm/dm/openapi-typescript-codegen.svg
-[build-url]: https://circleci.com/gh/ferdikoomen/openapi-typescript-codegen/tree/master
-[build-image]: https://circleci.com/gh/ferdikoomen/openapi-typescript-codegen/tree/master.svg?style=svg
+[license-image]: http://img.shields.io/npm/l/@majkit/openapi.svg
+[coverage-url]: https://codecov.io/gh/maxa-ondrej/openapi-typescript-codegen
+[coverage-image]: https://img.shields.io/codecov/c/github/maxa-ondrej/openapi-typescript-codegen.svg
+[downloads-url]: http://npm-stat.com/charts.html?package=@majkit/openapi
+[downloads-image]: http://img.shields.io/npm/dm/@majkit/openapi.svg
+[build-url]: https://circleci.com/gh/maxa-ondrej/openapi-typescript-codegen
+[build-image]: https://circleci.com/gh/maxa-ondrej/openapi-typescript-codegen.svg?style=svg
