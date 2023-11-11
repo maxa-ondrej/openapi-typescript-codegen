@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 orbs:
     codecov/codecov@3.2.4
 jobs:
@@ -26,5 +26,4 @@ jobs:
             - run:
                 name: Run unit tests
                 command: npm run test
-            - codecov/upload:
-                file: {{ coverage_report_filepath }}
+            - codecov/upload
