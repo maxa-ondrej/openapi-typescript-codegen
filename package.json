@@ -56,7 +56,6 @@
         "eslint": "eslint .",
         "eslint:fix": "eslint . --fix",
         "prepare": "npm run clean && npm run release",
-        "codecov": "codecov --token=938189e1-ff82-4130-85c6-6c107fe17861",
         "docker": "docker build -t @majkit/openapi ."
     },
     "dependencies": {
