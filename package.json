@@ -56,8 +56,8 @@
         "eslint": "eslint .",
         "eslint:fix": "eslint . --fix",
         "prepare": "npm run clean && npm run release",
-        "codecov": "codecov --token=66c30c23-8954-4892-bef9-fbaed0a2e42b",
-        "docker": "docker build -t eeelenbaas/openapi-typescript-codegen ."
+        "codecov": "codecov --token=938189e1-ff82-4130-85c6-6c107fe17861",
+        "docker": "docker build -t @majkit/openapi ."
     },
     "dependencies": {
         "@majkit/fp-ts-schema": "^1.1.1",
