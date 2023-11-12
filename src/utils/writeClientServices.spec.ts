@@ -11,37 +11,37 @@ import { writeClientServices } from './writeClientServices';
 jest.mock('./fileSystem');
 
 describe('writeClientServices', () => {
-    it('should write to filesystem', async () => {
-        const services: Service[] = [
-            {
-                name: 'User',
-                operations: [],
-                imports: [],
-            },
-        ];
+  it('should write to filesystem', async () => {
+    const services: Service[] = [
+      {
+        name: 'User',
+        operations: [],
+        imports: [],
+      },
+    ];
 
-        const templates: Templates = {
-            index: () => 'index',
-            client: () => 'client',
-            exports: {
-                model: () => 'model',
-                schema: () => 'schema',
-                service: () => 'service',
-            },
-            core: {
-                settings: () => 'settings',
-                apiError: () => 'apiError',
-                apiRequestOptions: () => 'apiRequestOptions',
-                apiResult: () => 'apiResult',
-                cancelablePromise: () => 'cancelablePromise',
-                request: () => 'request',
-                baseHttpRequest: () => 'baseHttpRequest',
-                httpRequest: () => 'httpRequest',
-            },
-        };
+    const templates: Templates = {
+      index: () => 'index',
+      client: () => 'client',
+      exports: {
+        model: () => 'model',
+        schema: () => 'schema',
+        service: () => 'service',
+      },
+      core: {
+        settings: () => 'settings',
+        apiError: () => 'apiError',
+        apiRequestOptions: () => 'apiRequestOptions',
+        apiResult: () => 'apiResult',
+        cancelablePromise: () => 'cancelablePromise',
+        request: () => 'request',
+        baseHttpRequest: () => 'baseHttpRequest',
+        httpRequest: () => 'httpRequest',
+      },
+    };
 
-        await writeClientServices(services, templates, '/', HttpClient.FETCH, false, Indent.SPACE_4, 'Service');
+    await writeClientServices(services, templates, '/', HttpClient.FETCH, false, Indent.SPACE_4, 'Service');
 
-        expect(writeFile).toBeCalledWith(resolve('/', '/UserService.ts'), `service${EOL}`);
-    });
+    expect(writeFile).toBeCalledWith(resolve('/', '/UserService.ts'), `service${EOL}`);
+  });
 });

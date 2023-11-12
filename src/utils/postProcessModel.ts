@@ -9,10 +9,10 @@ import { postProcessModelImports } from './postProcessModelImports';
  * @param model
  */
 export const postProcessModel = (model: Model): Model => {
-    return {
-        ...model,
-        imports: postProcessModelImports(model),
-        enums: postProcessModelEnums(model),
-        enum: postProcessModelEnum(model),
-    };
+  return {
+    ...model,
+    imports: postProcessModelImports(model),
+    enums: postProcessModelEnums(model),
+    enum: postProcessModelEnum(model),
+  };
 };

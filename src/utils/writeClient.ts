@@ -33,82 +33,82 @@ import { writeClientServices } from './writeClientServices';
  * @param request Path to custom request file
  */
 export const writeClient = async (
-    client: Client,
-    templates: Templates,
-    output: string,
-    httpClient: HttpClient,
-    useOptions: boolean,
-    exportCore: boolean,
-    exportServices: boolean,
-    exportModels: boolean,
-    exportSchemas: boolean,
-    indent: Indent,
-    postfixServices: string,
-    postfixModels: string,
-    clientName?: string,
-    request?: string
+  client: Client,
+  templates: Templates,
+  output: string,
+  httpClient: HttpClient,
+  useOptions: boolean,
+  exportCore: boolean,
+  exportServices: boolean,
+  exportModels: boolean,
+  exportSchemas: boolean,
+  indent: Indent,
+  postfixServices: string,
+  postfixModels: string,
+  clientName?: string,
+  request?: string,
 ): Promise<void> => {
-    const outputPath = resolve(process.cwd(), output);
-    const outputPathCore = resolve(outputPath, 'core');
-    const outputPathModels = resolve(outputPath, 'models');
-    const outputPathSchemas = resolve(outputPath, 'schemas');
-    const outputPathServices = resolve(outputPath, 'services');
+  const outputPath = resolve(process.cwd(), output);
+  const outputPathCore = resolve(outputPath, 'core');
+  const outputPathModels = resolve(outputPath, 'models');
+  const outputPathSchemas = resolve(outputPath, 'schemas');
+  const outputPathServices = resolve(outputPath, 'services');
 
-    if (!isSubDirectory(process.cwd(), output)) {
-        throw new Error(`Output folder is not a subdirectory of the current working directory`);
-    }
+  if (!isSubDirectory(process.cwd(), output)) {
+    throw new Error(`Output folder is not a subdirectory of the current working directory`);
+  }
 
-    if (exportCore) {
-        await rmdir(outputPathCore);
-        await mkdir(outputPathCore);
-        await writeClientCore(client, templates, outputPathCore, httpClient, indent, clientName, request);
-    }
+  if (exportCore) {
+    await rmdir(outputPathCore);
+    await mkdir(outputPathCore);
+    await writeClientCore(client, templates, outputPathCore, httpClient, indent, clientName, request);
+  }
 
-    if (exportServices) {
-        await rmdir(outputPathServices);
-        await mkdir(outputPathServices);
-        await writeClientServices(
-            client.services,
-            templates,
-            outputPathServices,
-            httpClient,
-            useOptions,
-            indent,
-            postfixServices,
-            clientName
-        );
-    }
+  if (exportServices) {
+    await rmdir(outputPathServices);
+    await mkdir(outputPathServices);
+    await writeClientServices(
+      client.services,
+      templates,
+      outputPathServices,
+      httpClient,
+      useOptions,
+      indent,
+      postfixServices,
+      clientName,
+    );
+  }
 
-    if (exportSchemas) {
-        await rmdir(outputPathSchemas);
-        await mkdir(outputPathSchemas);
-        await writeClientSchemas(client.models, templates, outputPathSchemas, httpClient, indent);
-    }
+  if (exportSchemas) {
+    await rmdir(outputPathSchemas);
+    await mkdir(outputPathSchemas);
+    await writeClientSchemas(client.models, templates, outputPathSchemas, httpClient, indent);
+  }
 
-    if (exportModels) {
-        await rmdir(outputPathModels);
-        await mkdir(outputPathModels);
-        await writeClientModels(client.models, templates, outputPathModels, httpClient, indent);
-    }
+  if (exportModels) {
+    await rmdir(outputPathModels);
+    await mkdir(outputPathModels);
+    await writeClientModels(client.models, templates, outputPathModels, httpClient, indent);
+  }
 
-    if (isDefined(clientName)) {
-        await mkdir(outputPath);
-        await writeClientClass(client, templates, outputPath, httpClient, clientName, indent, postfixServices);
-    }
+  if (isDefined(clientName)) {
+    await mkdir(outputPath);
+    await writeClientClass(client, templates, outputPath, httpClient, clientName, indent, postfixServices);
+  }
 
-    if (exportCore || exportServices || exportSchemas || exportModels) {
-        await mkdir(outputPath);
-        await writeClientIndex(
-            client,
-            templates,
-            outputPath,
-            exportCore,
-            exportServices,
-            exportModels,
-            exportSchemas,
-            postfixServices,
-            postfixModels,
-            clientName
-        );
-    }
+  if (exportCore || exportServices || exportSchemas || exportModels) {
+    await mkdir(outputPath);
+    await writeClientIndex(
+      client,
+      templates,
+      outputPath,
+      exportCore,
+      exportServices,
+      exportModels,
+      exportSchemas,
+      postfixServices,
+      postfixModels,
+      clientName,
+    );
+  }
 };

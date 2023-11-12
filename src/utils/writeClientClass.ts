@@ -24,24 +24,24 @@ import { sortServicesByName } from './sortServicesByName';
  * @param postfix Service name postfix
  */
 export const writeClientClass = async (
-    client: Client,
-    templates: Templates,
-    outputPath: string,
-    httpClient: HttpClient,
-    clientName: string,
-    indent: Indent,
-    postfix: string
+  client: Client,
+  templates: Templates,
+  outputPath: string,
+  httpClient: HttpClient,
+  clientName: string,
+  indent: Indent,
+  postfix: string,
 ): Promise<void> => {
-    const templateResult = templates.client({
-        clientName,
-        httpClient,
-        postfix,
-        server: client.server,
-        version: client.version,
-        models: sortModelsByName(client.models),
-        services: sortServicesByName(client.services),
-        httpRequest: getHttpRequestName(httpClient),
-    });
+  const templateResult = templates.client({
+    clientName,
+    httpClient,
+    postfix,
+    server: client.server,
+    version: client.version,
+    models: sortModelsByName(client.models),
+    services: sortServicesByName(client.services),
+    httpRequest: getHttpRequestName(httpClient),
+  });
 
-    await writeFile(resolve(outputPath, `${clientName}.ts`), i(f(templateResult), indent));
+  await writeFile(resolve(outputPath, `${clientName}.ts`), i(f(templateResult), indent));
 };

@@ -23,31 +23,31 @@ import { sortServicesByName } from './sortServicesByName';
  * @param clientName Custom client class name
  */
 export const writeClientIndex = async (
-    client: Client,
-    templates: Templates,
-    outputPath: string,
-    exportCore: boolean,
-    exportServices: boolean,
-    exportModels: boolean,
-    exportSchemas: boolean,
-    postfixServices: string,
-    postfixModels: string,
-    clientName?: string
+  client: Client,
+  templates: Templates,
+  outputPath: string,
+  exportCore: boolean,
+  exportServices: boolean,
+  exportModels: boolean,
+  exportSchemas: boolean,
+  postfixServices: string,
+  postfixModels: string,
+  clientName?: string,
 ): Promise<void> => {
-    const templateResult = templates.index({
-        exportCore,
-        exportServices,
-        exportModels,
-        exportSchemas,
-        postfixServices,
-        postfixModels,
-        clientName,
-        server: client.server,
-        version: client.version,
-        models: sortModelsByName(client.models),
-        services: sortServicesByName(client.services),
-        exportClient: isDefined(clientName),
-    });
+  const templateResult = templates.index({
+    exportCore,
+    exportServices,
+    exportModels,
+    exportSchemas,
+    postfixServices,
+    postfixModels,
+    clientName,
+    server: client.server,
+    version: client.version,
+    models: sortModelsByName(client.models),
+    services: sortServicesByName(client.services),
+    exportClient: isDefined(clientName),
+  });
 
-    await writeFile(resolve(outputPath, 'index.ts'), templateResult);
+  await writeFile(resolve(outputPath, 'index.ts'), templateResult);
 };

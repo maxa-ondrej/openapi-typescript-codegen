@@ -5,14 +5,14 @@ import { HttpClient } from '../HttpClient';
  * @param httpClient The selected httpClient (fetch, xhr, node or axios)
  */
 export const getHttpRequestName = (httpClient: HttpClient): string => {
-    switch (httpClient) {
-        case HttpClient.FETCH:
-            return 'FetchHttpRequest';
-        case HttpClient.XHR:
-            return 'XHRHttpRequest';
-        case HttpClient.NODE:
-            return 'NodeHttpRequest';
-        case HttpClient.AXIOS:
-            return 'AxiosHttpRequest';
-    }
+  switch (httpClient) {
+    case HttpClient.FETCH:
+      return 'FetchHttpRequest';
+    case HttpClient.XHR:
+      return 'XHRHttpRequest';
+    case HttpClient.NODE:
+      return 'NodeHttpRequest';
+    case HttpClient.AXIOS:
+      return 'AxiosHttpRequest';
+  }
 };

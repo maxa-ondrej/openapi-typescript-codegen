@@ -11,10 +11,10 @@ import { getServiceVersion } from './parser/getServiceVersion';
  * @param openApi The OpenAPI spec  that we have loaded from disk.
  */
 export const parse = (openApi: OpenApi): Client => {
-    const version = getServiceVersion(openApi.info.version);
-    const server = getServer(openApi);
-    const models = getModels(openApi);
-    const services = getServices(openApi);
+  const version = getServiceVersion(openApi.info.version);
+  const server = getServer(openApi);
+  const models = getModels(openApi);
+  const services = getServices(openApi);
 
-    return { version, server, models, services };
+  return { version, server, models, services };
 };

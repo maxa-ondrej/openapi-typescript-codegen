@@ -13,20 +13,20 @@ export { HttpClient } from './HttpClient';
 export { Indent } from './Indent';
 
 export type Options = {
-    input: string | Record<string, any>;
-    output: string;
-    httpClient?: HttpClient;
-    clientName?: string;
-    useOptions?: boolean;
-    exportCore?: boolean;
-    exportServices?: boolean;
-    exportModels?: boolean;
-    exportSchemas?: boolean;
-    indent?: Indent;
-    postfixServices?: string;
-    postfixModels?: string;
-    request?: string;
-    write?: boolean;
+  input: string | Record<string, any>;
+  output: string;
+  httpClient?: HttpClient;
+  clientName?: string;
+  useOptions?: boolean;
+  exportCore?: boolean;
+  exportServices?: boolean;
+  exportModels?: boolean;
+  exportSchemas?: boolean;
+  indent?: Indent;
+  postfixServices?: string;
+  postfixModels?: string;
+  request?: string;
+  write?: boolean;
 };
 
 /**
@@ -49,78 +49,78 @@ export type Options = {
  * @param write Write the files to disk (true or false)
  */
 export const generate = async ({
-    input,
-    output,
-    httpClient = HttpClient.FETCH,
-    clientName,
-    useOptions = false,
-    exportCore = true,
-    exportServices = true,
-    exportModels = true,
-    exportSchemas = false,
-    indent = Indent.SPACE_4,
-    postfixServices = 'Service',
-    postfixModels = '',
-    request,
-    write = true,
+  input,
+  output,
+  httpClient = HttpClient.FETCH,
+  clientName,
+  useOptions = false,
+  exportCore = true,
+  exportServices = true,
+  exportModels = true,
+  exportSchemas = false,
+  indent = Indent.SPACE_4,
+  postfixServices = 'Service',
+  postfixModels = '',
+  request,
+  write = true,
 }: Options): Promise<void> => {
-    const openApi = isString(input) ? await getOpenApiSpec(input) : input;
-    const openApiVersion = getOpenApiVersion(openApi);
-    const templates = registerHandlebarTemplates({
+  const openApi = isString(input) ? await getOpenApiSpec(input) : input;
+  const openApiVersion = getOpenApiVersion(openApi);
+  const templates = registerHandlebarTemplates({
+    httpClient,
+    useOptions,
+  });
+
+  switch (openApiVersion) {
+    case OpenApiVersion.V2: {
+      const client = parseV2(openApi);
+      const clientFinal = postProcessClient(client);
+      if (!write) break;
+      await writeClient(
+        clientFinal,
+        templates,
+        output,
         httpClient,
         useOptions,
-    });
-
-    switch (openApiVersion) {
-        case OpenApiVersion.V2: {
-            const client = parseV2(openApi);
-            const clientFinal = postProcessClient(client);
-            if (!write) break;
-            await writeClient(
-                clientFinal,
-                templates,
-                output,
-                httpClient,
-                useOptions,
-                exportCore,
-                exportServices,
-                exportModels,
-                exportSchemas,
-                indent,
-                postfixServices,
-                postfixModels,
-                clientName,
-                request
-            );
-            break;
-        }
-
-        case OpenApiVersion.V3: {
-            const client = parseV3(openApi);
-            const clientFinal = postProcessClient(client);
-            if (!write) break;
-            await writeClient(
-                clientFinal,
-                templates,
-                output,
-                httpClient,
-                useOptions,
-                exportCore,
-                exportServices,
-                exportModels,
-                exportSchemas,
-                indent,
-                postfixServices,
-                postfixModels,
-                clientName,
-                request
-            );
-            break;
-        }
+        exportCore,
+        exportServices,
+        exportModels,
+        exportSchemas,
+        indent,
+        postfixServices,
+        postfixModels,
+        clientName,
+        request,
+      );
+      break;
     }
+
+    case OpenApiVersion.V3: {
+      const client = parseV3(openApi);
+      const clientFinal = postProcessClient(client);
+      if (!write) break;
+      await writeClient(
+        clientFinal,
+        templates,
+        output,
+        httpClient,
+        useOptions,
+        exportCore,
+        exportServices,
+        exportModels,
+        exportSchemas,
+        indent,
+        postfixServices,
+        postfixModels,
+        clientName,
+        request,
+      );
+      break;
+    }
+  }
 };
 
 export default {
-    HttpClient,
-    generate,
+  HttpClient,
+  generate,
 };

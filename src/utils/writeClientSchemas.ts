@@ -17,18 +17,18 @@ import type { Templates } from './registerHandlebarTemplates';
  * @param indent Indentation options (4, 2 or tab)
  */
 export const writeClientSchemas = async (
-    models: Model[],
-    templates: Templates,
-    outputPath: string,
-    httpClient: HttpClient,
-    indent: Indent
+  models: Model[],
+  templates: Templates,
+  outputPath: string,
+  httpClient: HttpClient,
+  indent: Indent,
 ): Promise<void> => {
-    for (const model of models) {
-        const file = resolve(outputPath, `$${model.name}.ts`);
-        const templateResult = templates.exports.schema({
-            ...model,
-            httpClient,
-        });
-        await writeFile(file, i(f(templateResult), indent));
-    }
+  for (const model of models) {
+    const file = resolve(outputPath, `$${model.name}.ts`);
+    const templateResult = templates.exports.schema({
+      ...model,
+      httpClient,
+    });
+    await writeFile(file, i(f(templateResult), indent));
+  }
 };

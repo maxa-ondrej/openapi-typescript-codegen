@@ -5,9 +5,9 @@ import camelCase from 'camelcase';
  * the input string to PascalCase.
  */
 export const getServiceName = (value: string): string => {
-    const clean = value
-        .replace(/^[^a-zA-Z]+/g, '')
-        .replace(/[^\w\-]+/g, '-')
-        .trim();
-    return camelCase(clean, { pascalCase: true });
+  const clean = value
+    .replace(/^[^a-zA-Z]+/g, '')
+    .replace(/[^\w\-]+/g, '-')
+    .trim();
+  return camelCase(clean, { pascalCase: true });
 };

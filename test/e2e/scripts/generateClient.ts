@@ -1,17 +1,17 @@
 import { generate as __generate } from '../../../';
 
 export const generateClient = async (
-    dir: string,
-    version: string,
-    client: 'fetch' | 'xhr' | 'node' | 'axios',
-    useOptions: boolean = false,
-    clientName?: string
+  dir: string,
+  version: string,
+  client: 'fetch' | 'xhr' | 'node' | 'axios',
+  useOptions: boolean = false,
+  clientName?: string,
 ) => {
-    await __generate({
-        input: `./test/spec/${version}.json`,
-        output: `./test/e2e/generated/${dir}/`,
-        httpClient: client,
-        useOptions,
-        clientName,
-    });
+  await __generate({
+    input: `./test/spec/${version}.json`,
+    output: `./test/e2e/generated/${dir}/`,
+    httpClient: client,
+    useOptions,
+    clientName,
+  });
 };

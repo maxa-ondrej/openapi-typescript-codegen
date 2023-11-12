@@ -21,24 +21,24 @@ import type { Templates } from './registerHandlebarTemplates';
  * @param clientName Custom client class name
  */
 export const writeClientServices = async (
-    services: Service[],
-    templates: Templates,
-    outputPath: string,
-    httpClient: HttpClient,
-    useOptions: boolean,
-    indent: Indent,
-    postfix: string,
-    clientName?: string
+  services: Service[],
+  templates: Templates,
+  outputPath: string,
+  httpClient: HttpClient,
+  useOptions: boolean,
+  indent: Indent,
+  postfix: string,
+  clientName?: string,
 ): Promise<void> => {
-    for (const service of services) {
-        const file = resolve(outputPath, `${service.name}${postfix}.ts`);
-        const templateResult = templates.exports.service({
-            ...service,
-            httpClient,
-            useOptions,
-            postfix,
-            exportClient: isDefined(clientName),
-        });
-        await writeFile(file, i(f(templateResult), indent));
-    }
+  for (const service of services) {
+    const file = resolve(outputPath, `${service.name}${postfix}.ts`);
+    const templateResult = templates.exports.service({
+      ...service,
+      httpClient,
+      useOptions,
+      postfix,
+      exportClient: isDefined(clientName),
+    });
+    await writeFile(file, i(f(templateResult), indent));
+  }
 };

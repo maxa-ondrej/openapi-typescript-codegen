@@ -7,5 +7,5 @@ import { unique } from './unique';
  * @param service
  */
 export const postProcessServiceImports = (service: Service): string[] => {
-    return service.imports.filter(unique).sort(sort);
+  return service.imports.filter(unique).sort(sort);
 };

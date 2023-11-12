@@ -7,9 +7,9 @@ import { postProcessService } from './postProcessService';
  * @param client Client object with all the models, services, etc.
  */
 export const postProcessClient = (client: Client): Client => {
-    return {
-        ...client,
-        models: client.models.map(model => postProcessModel(model)),
-        services: client.services.map(service => postProcessService(service)),
-    };
+  return {
+    ...client,
+    models: client.models.map((model) => postProcessModel(model)),
+    services: client.services.map((service) => postProcessService(service)),
+  };
 };
