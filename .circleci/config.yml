@@ -25,5 +25,5 @@ jobs:
                 command: npm run release
             - run:
                 name: Run unit tests
-                command: npm run test
+                command: npm run test:coverage
             - codecov/upload
