@@ -1,10 +1,10 @@
 import { EOL } from 'os';
 import { resolve } from 'path';
 
-import type { Client } from '../client/interfaces/Client';
 import { HttpClient } from '../HttpClient';
 import { Indent } from '../Indent';
-import { writeFile } from './fileSystem';
+import type { Client } from '../client/interfaces/Client';
+import { exists, writeFile } from './fileSystem';
 import type { Templates } from './registerHandlebarTemplates';
 import { writeClientCore } from './writeClientCore';
 
@@ -39,7 +39,9 @@ describe('writeClientCore', () => {
       },
     };
 
-    await writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4);
+    // @ts-ignore
+    exists.mockReturnValue(true);
+    await writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4, 'MyClient');
 
     expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
@@ -47,5 +49,26 @@ describe('writeClientCore', () => {
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/CancelablePromise.ts'), `cancelablePromise${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
+
+    // @ts-ignore
+    exists.mockReturnValue(true);
+    await writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4, 'MyClient', 'request-copy.ts');
+
+    expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/ApiRequestOptions.ts'), `apiRequestOptions${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/CancelablePromise.ts'), `cancelablePromise${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/BaseHttpRequest.ts'), `baseHttpRequest${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/FetchHttpRequest.ts'), `httpRequest${EOL}`);
+
+    // @ts-ignore
+    exists.mockReturnValue(false);
+    await expect(() =>
+      writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4, 'MyClient', 'request-copy.ts'),
+    ).rejects.toThrowError(
+      new Error(`Custom request file "${resolve(process.cwd(), './request-copy.ts')}" does not exists`),
+    );
   });
 });
