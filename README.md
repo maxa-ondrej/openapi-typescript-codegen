@@ -100,4 +100,4 @@ Support
 [downloads-url]: http://npm-stat.com/charts.html?package=@majkit/openapi
 [downloads-image]: http://img.shields.io/npm/dm/@majkit/openapi.svg
 [build-url]: https://dl.circleci.com/status-badge/redirect/circleci/Y53CrcVgMSBZm7DzvzFD9k/AgUdrXXFjtCoKjN45w9nRx/tree/master
-[build-image]: https://dl.circleci.com/status-badge/img/circleci/Y53CrcVgMSBZm7DzvzFD9k/AgUdrXXFjtCoKjN45w9nRx/tree/master.svg?style=svg
+[build-image]: https://dl.circleci.com/status-badge/img/circleci/Y53CrcVgMSBZm7DzvzFD9k/AgUdrXXFjtCoKjN45w9nRx/tree/master.svg?style=svg&circle-token=28fbb9706b426e5447418405ca9e2ed1d983a79e
