@@ -1,6 +1,6 @@
 {
   "name": "@majkit/openapi",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "description": "Library that generates Typescript clients based on the OpenAPI specification.",
   "author": "Majkit",
   "homepage": "https://github.com/maxa-ondrej/openapi-typescript-codegen",
@@ -12,18 +12,7 @@
     "url": "https://github.com/maxa-ondrej/openapi-typescript-codegen/issues"
   },
   "license": "MIT",
-  "keywords": [
-    "openapi",
-    "swagger",
-    "generator",
-    "typescript",
-    "yaml",
-    "json",
-    "fetch",
-    "xhr",
-    "axios",
-    "node"
-  ],
+  "keywords": ["openapi", "swagger", "generator", "typescript", "yaml", "json", "fetch", "xhr", "axios", "node"],
   "maintainers": [
     {
       "name": "Ondrej Maxa",
@@ -35,11 +24,7 @@
   "bin": {
     "openapi": "bin/index.js"
   },
-  "files": [
-    "bin/index.js",
-    "dist/index.js",
-    "types/index.d.ts"
-  ],
+  "files": ["bin/index.js", "dist/index.js", "types/index.d.ts"],
   "scripts": {
     "clean": "rimraf ./dist ./test/generated ./test/e2e/generated ./samples/generated ./coverage ./node_modules/.cache",
     "build": "rollup --config --environment NODE_ENV:development",
@@ -58,7 +43,7 @@
     "docker": "docker build -t @majkit/openapi ."
   },
   "peerDependencies": {
-    "@majkit/fp-ts-schema": "^1.1.4"
+    "@majkit/fp-ts-schema": "^1.1.5"
   },
   "dependencies": {
     "camelcase": "^6.3.0",
