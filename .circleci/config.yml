@@ -2,28 +2,71 @@ version: 2.1
 orbs:
     codecov: codecov/codecov@3.3.0
 jobs:
-    build:
-        docker:
-            - image: 'cimg/node:lts-browsers'
-        resource_class: large
-        working_directory: ~/repo
-        steps:
-            - checkout
-            - restore_cache:
-                keys:
-                    - 'v1-dependencies-{{ checksum "package-lock.json" }}'
-                    - v1-dependencies-
-            - run:
-                name: Install dependencies
-                command: npm install
-            - save_cache:
-                key: 'v1-dependencies-{{ checksum "package-lock.json" }}'
-                paths:
-                    - node_modules
-            - run:
-                name: Build library
-                command: npm run release
-            - run:
-                name: Run unit tests
-                command: npm run test:coverage
-            - codecov/upload
+  test:
+    docker:
+      - image: 'cimg/node:lts-browsers'
+    resource_class: large
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - 'v1-dependencies-{{ checksum "pnpm-lock.yaml" }}'
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: 'v1-dependencies-{{ checksum "pnpm-lock.yaml" }}'
+          paths:
+            - node_modules
+      - run:
+          name: Build library
+          command: pnpm run prepublish
+      - run:
+          name: Run unit tests
+          command: pnpm jest --ci --runInBand --reporters=default --reporters=jest-junit --coverage
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/
+            JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
+      - store_test_results:
+          path: ./reports/
+      - codecov/upload
+  publish:
+    docker:
+      - image: 'cimg/node:lts-browsers'
+    resource_class: large
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - 'v1-dependencies-{{ checksum "pnpm-lock.yaml" }}'
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: pnpm install
+      - save_cache:
+          key: 'v1-dependencies-{{ checksum "pnpm-lock.yaml" }}'
+          paths:
+            - node_modules
+      - run:
+          name: Build library
+          command: pnpm run prepublish
+      - run:
+          name: Publish to NPM
+          command: |
+            npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+            pnpm publish
+
+workflows:
+  main:
+    jobs:
+      - test
+      - publish:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
