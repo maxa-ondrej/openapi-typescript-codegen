@@ -24,7 +24,7 @@ export class {{{name}}}{{{@root.postfix}}} {
 	{{#each operations}}
 
 	{{#if parameters}}
-	private static {{{name}}}Decoder = D.object({
+	private {{#unless @root.exportClient}}static {{/unless}}{{{name}}}Decoder = D.object({
 	{{#if @root.useOptions~}}
 	{{#each parameters}}
 	{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}},

@@ -26,12 +26,12 @@ describe('writeClientIndex', () => {
       },
       core: {
         settings: () => 'settings',
-        apiError: () => 'apiError',
         apiRequestOptions: () => 'apiRequestOptions',
         apiResponse: () => 'apiResponse',
         apiResult: () => 'apiResult',
         request: () => 'request',
         baseHttpRequest: () => 'baseHttpRequest',
+        httpError: () => 'httpError',
         httpRequest: () => 'httpRequest',
       },
     };

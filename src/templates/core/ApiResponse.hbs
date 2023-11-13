@@ -3,9 +3,9 @@
 import type { Decoder, Output, DecoderError } from '@majkit/fp-ts-schema';
 import type { Either } from 'fp-ts/lib/Either';
 
-export type ApiResponse<T extends Record<number,Decoder<any>>> = {
-	[key in keyof T]: key extends number ? Either<DecoderError, {
+export type ApiResponse<T extends Record<number,Decoder<unknown>>> = {
+	[key in keyof T]: key extends number ? {
 		readonly status: key extends 0 ? number : key;
-		readonly body: Output<T[key]>;
-	}> : never;
+		readonly body: Either<DecoderError, Output<T[key]>>;
+	} : never;
 }[keyof T];

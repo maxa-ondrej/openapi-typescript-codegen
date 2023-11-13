@@ -1,8 +1,8 @@
-type Resolver<T> = (options: ApiRequestOptions) => Promise<T>;
+type Resolver<T extends Record<number,D.Decoder<unknown>>,E> = (options: ApiRequestOptions<T>) => Promise<E>;
 
-export const resolve = async <T>(options: ApiRequestOptions, resolver?: T | Resolver<T>): Promise<T | undefined> => {
+export const resolve = async <T extends Record<number,D.Decoder<unknown>>,E>(options: ApiRequestOptions<T>, resolver?: E | Resolver<T,E>): Promise<E | undefined> => {
 	if (typeof resolver === 'function') {
-		return (resolver as Resolver<T>)(options);
+		return (resolver as Resolver<T,E>)(options);
 	}
 	return resolver;
 };

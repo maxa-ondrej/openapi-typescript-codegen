@@ -1,21 +1,15 @@
-export const sendRequest = async (
-	options: ApiRequestOptions,
+export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
+	options: ApiRequestOptions<T>,
 	url: string,
-	body: any,
+	body: RequestInit['body'],
 	formData: FormData | undefined,
 	headers: Headers,
-	onCancel: OnCancel
 ): Promise<Response> => {
-	const controller = new AbortController();
-
 	const request: RequestInit = {
 		headers,
 		method: options.method,
 		body: body ?? formData,
-		signal: controller.signal as AbortSignal,
 	};
-
-	onCancel(() => controller.abort());
 
 	return await fetch(url, request);
 };

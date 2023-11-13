@@ -5,7 +5,7 @@ import type { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosInstance } fro
 import FormData from 'form-data';
 
 import * as D from '@majkit/fp-ts-schema';
-import { ApiError, HTTPError } from './ApiError';
+import { HttpError } from './HttpError';
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
 import type { ApiResponse } from './ApiResponse';
@@ -69,14 +69,14 @@ import type { TaskEither } from 'fp-ts/lib/TaskEither';
  * @param options The request options from the service
  * @param axiosClient The axios client instance to use
  */
-export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>, axiosClient: AxiosInstance = axios): TaskEither<HTTPError, ApiResponse<T>> => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>, axiosClient: AxiosInstance = axios): TaskEither<HttpError, ApiResponse<T>> => {
 	return async () => {
 		try {
 			const url = getUrl(config, options);
 			const formData = getFormData(options);
 			const body = getRequestBody(options);
 			const headers = await getHeaders(config, options, formData);
-			const response = await sendRequest<T>(config, options, url, body, formData, headers, onCancel, axiosClient);
+			const response = await sendRequest(config, options, url, body, formData, headers, axiosClient);
 			const responseBody = getResponseBody(response);
 			const responseHeader = getResponseHeader(response, options.responseHeader);
 			const result: ApiResult = {
@@ -88,7 +88,7 @@ export const request = <T extends Record<number,D.Decoder<unknown>>>(config: Ope
 			};
 			return right(decodeResponse(result, options));
 		} catch (error) {
-			return left(new HTTPError(error));
+			return left(new HttpError(error));
 		}
 	};
 };

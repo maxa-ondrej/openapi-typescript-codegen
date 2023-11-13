@@ -1,60 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`v2 should generate: test/generated/v2/core/ApiError.ts 1`] = `
-"/* generated using openapi-typescript-codegen -- do no edit */
-/* istanbul ignore file */
-/* tslint:disable */
-/* eslint-disable */
-import type { ApiRequestOptions } from './ApiRequestOptions';
-import type { ApiResult } from './ApiResult';
-import type * as D from '@majkit/fp-ts-schema';
-
-export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
-    public readonly url: string;
-    public readonly status: number;
-    public readonly statusText: string;
-    public readonly body: any;
-    public readonly request: ApiRequestOptions<T>;
-
-    constructor(request: ApiRequestOptions<T>, response: ApiResult, message: string) {
-        super(message);
-
-        this.name = 'ApiError';
-        this.url = response.url;
-        this.status = response.status;
-        this.statusText = response.statusText;
-        this.body = response.body;
-        this.request = request;
-    }
-}
-
-export class HTTPError extends Error {
-    cause: unknown;
-
-    constructor(originalError: unknown) {
-        super(\`\${originalError}\`);
-
-        this.cause = originalError;
-        this.name = 'HTTPError';
-    }
-}
-"
-`;
-
 exports[`v2 should generate: test/generated/v2/core/ApiRequestOptions.ts 1`] = `
 "/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
+import type { Decoder } from '@majkit/fp-ts-schema';
+
+export type ApiRequestOptions<T extends Record<number,Decoder<unknown>>> = {
     readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
     readonly url: string;
-    readonly path?: Record<string, any>;
-    readonly cookies?: Record<string, any>;
-    readonly headers?: Record<string, any>;
-    readonly query?: Record<string, any>;
-    readonly formData?: Record<string, any>;
-    readonly body?: any;
+    readonly path?: Record<string, unknown>;
+    readonly cookies?: Record<string, unknown>;
+    readonly headers?: Record<string, unknown>;
+    readonly query?: Record<string, unknown>;
+    readonly formData?: Record<string, unknown>;
+    readonly body?: unknown;
     readonly mediaType?: string;
     readonly decoders?: T;
     readonly responseHeader?: string;
@@ -71,11 +32,11 @@ exports[`v2 should generate: test/generated/v2/core/ApiResponse.ts 1`] = `
 import type { Decoder, Output, DecoderError } from '@majkit/fp-ts-schema';
 import type { Either } from 'fp-ts/lib/Either';
 
-export type ApiResponse<T extends Record<number,Decoder<any>>> = {
-    [key in keyof T]: key extends number ? Either<DecoderError, {
+export type ApiResponse<T extends Record<number,Decoder<unknown>>> = {
+    [key in keyof T]: key extends number ? {
         readonly status: key extends 0 ? number : key;
-        readonly body: Output<T[key]>;
-    }> : never;
+        readonly body: Either<DecoderError, Output<T[key]>>;
+    } : never;
 }[keyof T];
 "
 `;
@@ -90,8 +51,26 @@ export type ApiResult = {
     readonly ok: boolean;
     readonly status: number;
     readonly statusText: string;
-    readonly body: any;
+    readonly body: unknown;
 };
+"
+`;
+
+exports[`v2 should generate: test/generated/v2/core/HttpError.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+export class HttpError extends Error {
+    cause: unknown;
+
+    constructor(originalError: unknown) {
+        super(\`\${originalError}\`);
+
+        this.cause = originalError;
+        this.name = 'HttpError';
+    }
+}
 "
 `;
 
@@ -103,7 +82,7 @@ exports[`v2 should generate: test/generated/v2/core/OpenAPI.ts 1`] = `
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type * as D from '@majkit/fp-ts-schema';
 
-type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<any>>>) => Promise<T>;
+type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<unknown>>>) => Promise<T>;
 type Headers = Record<string, string>;
 
 export type OpenAPIConfig = {
@@ -138,7 +117,7 @@ exports[`v2 should generate: test/generated/v2/core/request.ts 1`] = `
 /* tslint:disable */
 /* eslint-disable */
 import * as D from '@majkit/fp-ts-schema';
-import { ApiError, HTTPError } from './ApiError';
+import { HttpError } from './HttpError';
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
 import type { ApiResponse } from './ApiResponse';
@@ -150,17 +129,21 @@ export const isDefined = <T>(value: T | null | undefined): value is Exclude<T, n
     return value !== undefined && value !== null;
 };
 
-export const isString = (value: any): value is string => {
+export const isString = (value: unknown): value is string => {
     return typeof value === 'string';
 };
 
-export const isStringWithValue = (value: any): value is string => {
+export const isStringWithValue = (value: unknown): value is string => {
     return isString(value) && value !== '';
 };
 
-export const isBlob = (value: any): value is Blob => {
+export const isBlob = (value: unknown): value is Blob => {
     return (
         typeof value === 'object' &&
+        value !== null &&
+        'type' in value &&
+        'stream' in value &&
+        'arrayBuffer' in value &&
         typeof value.type === 'string' &&
         typeof value.stream === 'function' &&
         typeof value.arrayBuffer === 'function' &&
@@ -171,7 +154,7 @@ export const isBlob = (value: any): value is Blob => {
     );
 };
 
-export const isFormData = (value: any): value is FormData => {
+export const isFormData = (value: unknown): value is FormData => {
     return value instanceof FormData;
 };
 
@@ -184,20 +167,20 @@ export const base64 = (str: string): string => {
     }
 };
 
-export const getQueryString = (params: Record<string, any>): string => {
+export const getQueryString = (params: Record<string, unknown>): string => {
     const qs: string[] = [];
 
-    const append = (key: string, value: any) => {
+    const append = (key: string, value: unknown) => {
         qs.push(\`\${encodeURIComponent(key)}=\${encodeURIComponent(String(value))}\`);
     };
 
-    const process = (key: string, value: any) => {
+    const process = (key: string, value: unknown) => {
         if (isDefined(value)) {
             if (Array.isArray(value)) {
                 value.forEach(v => {
                     process(key, v);
                 });
-            } else if (typeof value === 'object') {
+            } else if (typeof value === 'object' && value !== null) {
                 Object.entries(value).forEach(([k, v]) => {
                     process(\`\${key}[\${k}]\`, v);
                 });
@@ -218,7 +201,7 @@ export const getQueryString = (params: Record<string, any>): string => {
     return '';
 };
 
-const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
+const getUrl = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): string => {
     const encoder = config.ENCODE_PATH || encodeURI;
 
     const path = options.url
@@ -237,11 +220,11 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
     return url;
 };
 
-export const getFormData = (options: ApiRequestOptions): FormData | undefined => {
+export const getFormData = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>): FormData | undefined => {
     if (options.formData) {
         const formData = new FormData();
 
-        const process = (key: string, value: any) => {
+        const process = (key: string, value: unknown) => {
             if (isString(value) || isBlob(value)) {
                 formData.append(key, value);
             } else {
@@ -264,16 +247,16 @@ export const getFormData = (options: ApiRequestOptions): FormData | undefined =>
     return undefined;
 };
 
-type Resolver<T> = (options: ApiRequestOptions) => Promise<T>;
+type Resolver<T extends Record<number,D.Decoder<unknown>>,E> = (options: ApiRequestOptions<T>) => Promise<E>;
 
-export const resolve = async <T>(options: ApiRequestOptions, resolver?: T | Resolver<T>): Promise<T | undefined> => {
+export const resolve = async <T extends Record<number,D.Decoder<unknown>>,E>(options: ApiRequestOptions<T>, resolver?: E | Resolver<T,E>): Promise<E | undefined> => {
     if (typeof resolver === 'function') {
-        return (resolver as Resolver<T>)(options);
+        return (resolver as Resolver<T,E>)(options);
     }
     return resolver;
 };
 
-export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptions): Promise<Headers> => {
+export const getHeaders = async <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): Promise<Headers> => {
     const token = await resolve(options, config.TOKEN);
     const username = await resolve(options, config.USERNAME);
     const password = await resolve(options, config.PASSWORD);
@@ -314,14 +297,14 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
     return new Headers(headers);
 };
 
-const flattenOption = (body: unknown): any =>
+const flattenOption = (body: unknown): unknown =>
     typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
     && (body._tag === 'None' || body._tag === 'Some')
     ? body._tag === 'Some' && 'value' in body
     ? body.value : undefined
     : body;
 
-const convertRequestBody = (body: unknown): any =>
+const convertRequestBody = (body: unknown): unknown =>
     typeof body === 'object' && body !== null
         ? (() => {
             const flattened = flattenOption(body);
@@ -341,7 +324,7 @@ const convertRequestBody = (body: unknown): any =>
         })()
         : body;
 
-export const getRequestBody = (options: ApiRequestOptions): any => {
+export const getRequestBody = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>) => {
     if (options.body !== undefined) {
         const body = convertRequestBody(options.body);
         if (options.mediaType?.includes('/json')) {
@@ -355,29 +338,23 @@ export const getRequestBody = (options: ApiRequestOptions): any => {
     return undefined;
 };
 
-export const sendRequest = async (
+export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
     config: OpenAPIConfig,
-    options: ApiRequestOptions,
+    options: ApiRequestOptions<T>,
     url: string,
-    body: any,
+    body: string | undefined | Blob | FormData,
     formData: FormData | undefined,
     headers: Headers,
-    onCancel: OnCancel
 ): Promise<Response> => {
-    const controller = new AbortController();
-
     const request: RequestInit = {
         headers,
         body: body ?? formData,
         method: options.method,
-        signal: controller.signal,
     };
 
     if (config.WITH_CREDENTIALS) {
         request.credentials = config.CREDENTIALS;
     }
-
-    onCancel(() => controller.abort());
 
     return await fetch(url, request);
 };
@@ -392,7 +369,7 @@ export const getResponseHeader = (response: Response, responseHeader?: string): 
     return undefined;
 };
 
-export const getResponseBody = async (response: Response): Promise<any> => {
+export const getResponseBody = async (response: Response): Promise<unknown> => {
     if (response.status !== 204) {
         try {
             const contentType = response.headers.get('Content-Type');
@@ -413,26 +390,26 @@ export const getResponseBody = async (response: Response): Promise<any> => {
 };
 
 const decodeResponse = <T extends Record<number,D.Decoder<unknown>>>(result: ApiResult, options: ApiRequestOptions<T>): ApiResponse<T> => {
-    const decoder = options.decoders[result.status] ?? options.decoders[0] ?? D.unknown;
-    const body = decoder.decode(result.data);
+    const decoder = options.decoders?.[result.status] ?? options.decoders?.[0] ?? D.unknown;
+    const body = decoder.decode(result.body);
     return {
         status: result.status,
-        body: body,
-    };
+        body,
+    } as ApiResponse<T>;
 }
 /**
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
  */
-export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HTTPError, ApiResponse<T>> => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HttpError, ApiResponse<T>> => {
     return async () => {
         try {
             const url = getUrl(config, options);
             const formData = getFormData(options);
             const body = getRequestBody(options);
             const headers = await getHeaders(config, options);
-            const response = await sendRequest(options, url, body, formData, headers, onCancel);
+            const response = await sendRequest(config, options, url, body, formData, headers);
             const responseBody = await getResponseBody(response);
             const responseHeader = getResponseHeader(response, options.responseHeader);
             const result: ApiResult = {
@@ -444,7 +421,7 @@ export const request = <T extends Record<number,D.Decoder<unknown>>>(config: Ope
             };
             return right(decodeResponse(result, options));
         } catch (error) {
-            return left(new HTTPError(error));
+            return left(new HttpError(error));
         }
     };
 };
@@ -456,8 +433,7 @@ exports[`v2 should generate: test/generated/v2/index.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export { ApiError } from './core/ApiError';
-export { CancelablePromise, CancelError } from './core/CancelablePromise';
+export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
@@ -2803,42 +2779,19 @@ export class TypesService {
 "
 `;
 
-exports[`v3 should generate: test/generated/v3/core/ApiError.ts 1`] = `
+exports[`v3 should generate: test/generated/v3/core/HttpError.ts 1`] = `
 "/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApiRequestOptions } from './ApiRequestOptions';
-import type { ApiResult } from './ApiResult';
-import type * as D from '@majkit/fp-ts-schema';
-
-export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
-    public readonly url: string;
-    public readonly status: number;
-    public readonly statusText: string;
-    public readonly body: any;
-    public readonly request: ApiRequestOptions<T>;
-
-    constructor(request: ApiRequestOptions<T>, response: ApiResult, message: string) {
-        super(message);
-
-        this.name = 'ApiError';
-        this.url = response.url;
-        this.status = response.status;
-        this.statusText = response.statusText;
-        this.body = response.body;
-        this.request = request;
-    }
-}
-
-export class HTTPError extends Error {
+export class HttpError extends Error {
     cause: unknown;
 
     constructor(originalError: unknown) {
         super(\`\${originalError}\`);
 
         this.cause = originalError;
-        this.name = 'HTTPError';
+        this.name = 'HttpError';
     }
 }
 "
@@ -2849,15 +2802,17 @@ exports[`v3 should generate: test/generated/v3/core/ApiRequestOptions.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
+import type { Decoder } from '@majkit/fp-ts-schema';
+
+export type ApiRequestOptions<T extends Record<number,Decoder<unknown>>> = {
     readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
     readonly url: string;
-    readonly path?: Record<string, any>;
-    readonly cookies?: Record<string, any>;
-    readonly headers?: Record<string, any>;
-    readonly query?: Record<string, any>;
-    readonly formData?: Record<string, any>;
-    readonly body?: any;
+    readonly path?: Record<string, unknown>;
+    readonly cookies?: Record<string, unknown>;
+    readonly headers?: Record<string, unknown>;
+    readonly query?: Record<string, unknown>;
+    readonly formData?: Record<string, unknown>;
+    readonly body?: unknown;
     readonly mediaType?: string;
     readonly decoders?: T;
     readonly responseHeader?: string;
@@ -2874,11 +2829,11 @@ exports[`v3 should generate: test/generated/v3/core/ApiResponse.ts 1`] = `
 import type { Decoder, Output, DecoderError } from '@majkit/fp-ts-schema';
 import type { Either } from 'fp-ts/lib/Either';
 
-export type ApiResponse<T extends Record<number,Decoder<any>>> = {
-    [key in keyof T]: key extends number ? Either<DecoderError, {
+export type ApiResponse<T extends Record<number,Decoder<unknown>>> = {
+    [key in keyof T]: key extends number ? {
         readonly status: key extends 0 ? number : key;
-        readonly body: Output<T[key]>;
-    }> : never;
+        readonly body: Either<DecoderError, Output<T[key]>>;
+    } : never;
 }[keyof T];
 "
 `;
@@ -2893,7 +2848,7 @@ export type ApiResult = {
     readonly ok: boolean;
     readonly status: number;
     readonly statusText: string;
-    readonly body: any;
+    readonly body: unknown;
 };
 "
 `;
@@ -2906,7 +2861,7 @@ exports[`v3 should generate: test/generated/v3/core/OpenAPI.ts 1`] = `
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type * as D from '@majkit/fp-ts-schema';
 
-type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<any>>>) => Promise<T>;
+type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<unknown>>>) => Promise<T>;
 type Headers = Record<string, string>;
 
 export type OpenAPIConfig = {
@@ -2941,7 +2896,7 @@ exports[`v3 should generate: test/generated/v3/core/request.ts 1`] = `
 /* tslint:disable */
 /* eslint-disable */
 import * as D from '@majkit/fp-ts-schema';
-import { ApiError, HTTPError } from './ApiError';
+import { HttpError } from './HttpError';
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
 import type { ApiResponse } from './ApiResponse';
@@ -2953,17 +2908,21 @@ export const isDefined = <T>(value: T | null | undefined): value is Exclude<T, n
     return value !== undefined && value !== null;
 };
 
-export const isString = (value: any): value is string => {
+export const isString = (value: unknown): value is string => {
     return typeof value === 'string';
 };
 
-export const isStringWithValue = (value: any): value is string => {
+export const isStringWithValue = (value: unknown): value is string => {
     return isString(value) && value !== '';
 };
 
-export const isBlob = (value: any): value is Blob => {
+export const isBlob = (value: unknown): value is Blob => {
     return (
         typeof value === 'object' &&
+        value !== null &&
+        'type' in value &&
+        'stream' in value &&
+        'arrayBuffer' in value &&
         typeof value.type === 'string' &&
         typeof value.stream === 'function' &&
         typeof value.arrayBuffer === 'function' &&
@@ -2974,7 +2933,7 @@ export const isBlob = (value: any): value is Blob => {
     );
 };
 
-export const isFormData = (value: any): value is FormData => {
+export const isFormData = (value: unknown): value is FormData => {
     return value instanceof FormData;
 };
 
@@ -2987,20 +2946,20 @@ export const base64 = (str: string): string => {
     }
 };
 
-export const getQueryString = (params: Record<string, any>): string => {
+export const getQueryString = (params: Record<string, unknown>): string => {
     const qs: string[] = [];
 
-    const append = (key: string, value: any) => {
+    const append = (key: string, value: unknown) => {
         qs.push(\`\${encodeURIComponent(key)}=\${encodeURIComponent(String(value))}\`);
     };
 
-    const process = (key: string, value: any) => {
+    const process = (key: string, value: unknown) => {
         if (isDefined(value)) {
             if (Array.isArray(value)) {
                 value.forEach(v => {
                     process(key, v);
                 });
-            } else if (typeof value === 'object') {
+            } else if (typeof value === 'object' && value !== null) {
                 Object.entries(value).forEach(([k, v]) => {
                     process(\`\${key}[\${k}]\`, v);
                 });
@@ -3021,7 +2980,7 @@ export const getQueryString = (params: Record<string, any>): string => {
     return '';
 };
 
-const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
+const getUrl = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): string => {
     const encoder = config.ENCODE_PATH || encodeURI;
 
     const path = options.url
@@ -3040,11 +2999,11 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
     return url;
 };
 
-export const getFormData = (options: ApiRequestOptions): FormData | undefined => {
+export const getFormData = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>): FormData | undefined => {
     if (options.formData) {
         const formData = new FormData();
 
-        const process = (key: string, value: any) => {
+        const process = (key: string, value: unknown) => {
             if (isString(value) || isBlob(value)) {
                 formData.append(key, value);
             } else {
@@ -3067,16 +3026,16 @@ export const getFormData = (options: ApiRequestOptions): FormData | undefined =>
     return undefined;
 };
 
-type Resolver<T> = (options: ApiRequestOptions) => Promise<T>;
+type Resolver<T extends Record<number,D.Decoder<unknown>>,E> = (options: ApiRequestOptions<T>) => Promise<E>;
 
-export const resolve = async <T>(options: ApiRequestOptions, resolver?: T | Resolver<T>): Promise<T | undefined> => {
+export const resolve = async <T extends Record<number,D.Decoder<unknown>>,E>(options: ApiRequestOptions<T>, resolver?: E | Resolver<T,E>): Promise<E | undefined> => {
     if (typeof resolver === 'function') {
-        return (resolver as Resolver<T>)(options);
+        return (resolver as Resolver<T,E>)(options);
     }
     return resolver;
 };
 
-export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptions): Promise<Headers> => {
+export const getHeaders = async <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): Promise<Headers> => {
     const token = await resolve(options, config.TOKEN);
     const username = await resolve(options, config.USERNAME);
     const password = await resolve(options, config.PASSWORD);
@@ -3117,14 +3076,14 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
     return new Headers(headers);
 };
 
-const flattenOption = (body: unknown): any =>
+const flattenOption = (body: unknown): unknown =>
     typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
     && (body._tag === 'None' || body._tag === 'Some')
     ? body._tag === 'Some' && 'value' in body
     ? body.value : undefined
     : body;
 
-const convertRequestBody = (body: unknown): any =>
+const convertRequestBody = (body: unknown): unknown =>
     typeof body === 'object' && body !== null
         ? (() => {
             const flattened = flattenOption(body);
@@ -3144,7 +3103,7 @@ const convertRequestBody = (body: unknown): any =>
         })()
         : body;
 
-export const getRequestBody = (options: ApiRequestOptions): any => {
+export const getRequestBody = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>) => {
     if (options.body !== undefined) {
         const body = convertRequestBody(options.body);
         if (options.mediaType?.includes('/json')) {
@@ -3158,29 +3117,23 @@ export const getRequestBody = (options: ApiRequestOptions): any => {
     return undefined;
 };
 
-export const sendRequest = async (
+export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
     config: OpenAPIConfig,
-    options: ApiRequestOptions,
+    options: ApiRequestOptions<T>,
     url: string,
-    body: any,
+    body: string | undefined | Blob | FormData,
     formData: FormData | undefined,
     headers: Headers,
-    onCancel: OnCancel
 ): Promise<Response> => {
-    const controller = new AbortController();
-
     const request: RequestInit = {
         headers,
         body: body ?? formData,
         method: options.method,
-        signal: controller.signal,
     };
 
     if (config.WITH_CREDENTIALS) {
         request.credentials = config.CREDENTIALS;
     }
-
-    onCancel(() => controller.abort());
 
     return await fetch(url, request);
 };
@@ -3195,7 +3148,7 @@ export const getResponseHeader = (response: Response, responseHeader?: string): 
     return undefined;
 };
 
-export const getResponseBody = async (response: Response): Promise<any> => {
+export const getResponseBody = async (response: Response): Promise<unknown> => {
     if (response.status !== 204) {
         try {
             const contentType = response.headers.get('Content-Type');
@@ -3216,26 +3169,26 @@ export const getResponseBody = async (response: Response): Promise<any> => {
 };
 
 const decodeResponse = <T extends Record<number,D.Decoder<unknown>>>(result: ApiResult, options: ApiRequestOptions<T>): ApiResponse<T> => {
-    const decoder = options.decoders[result.status] ?? options.decoders[0] ?? D.unknown;
-    const body = decoder.decode(result.data);
+    const decoder = options.decoders?.[result.status] ?? options.decoders?.[0] ?? D.unknown;
+    const body = decoder.decode(result.body);
     return {
         status: result.status,
-        body: body,
-    };
+        body,
+    } as ApiResponse<T>;
 }
 /**
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
  */
-export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HTTPError, ApiResponse<T>> => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HttpError, ApiResponse<T>> => {
     return async () => {
         try {
             const url = getUrl(config, options);
             const formData = getFormData(options);
             const body = getRequestBody(options);
             const headers = await getHeaders(config, options);
-            const response = await sendRequest(options, url, body, formData, headers, onCancel);
+            const response = await sendRequest(config, options, url, body, formData, headers);
             const responseBody = await getResponseBody(response);
             const responseHeader = getResponseHeader(response, options.responseHeader);
             const result: ApiResult = {
@@ -3247,7 +3200,7 @@ export const request = <T extends Record<number,D.Decoder<unknown>>>(config: Ope
             };
             return right(decodeResponse(result, options));
         } catch (error) {
-            return left(new HTTPError(error));
+            return left(new HttpError(error));
         }
     };
 };
@@ -3259,8 +3212,7 @@ exports[`v3 should generate: test/generated/v3/index.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export { ApiError } from './core/ApiError';
-export { CancelablePromise, CancelError } from './core/CancelablePromise';
+export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 

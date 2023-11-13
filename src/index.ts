@@ -3,7 +3,7 @@ import { Indent } from './Indent';
 import { parse as parseV2 } from './openApi/v2';
 import { parse as parseV3 } from './openApi/v3';
 import { getOpenApiSpec } from './utils/getOpenApiSpec';
-import { getOpenApiVersion, OpenApiVersion } from './utils/getOpenApiVersion';
+import { OpenApiVersion, getOpenApiVersion } from './utils/getOpenApiVersion';
 import { isString } from './utils/isString';
 import { postProcessClient } from './utils/postProcessClient';
 import { registerHandlebarTemplates } from './utils/registerHandlebarTemplates';
@@ -13,7 +13,7 @@ export { HttpClient } from './HttpClient';
 export { Indent } from './Indent';
 
 export type Options = {
-  input: string | Record<string, any>;
+  input: string | Record<string, unknown>;
   output: string;
   httpClient?: HttpClient;
   clientName?: string;

@@ -1,4 +1,4 @@
-const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
+const getUrl = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): string => {
 	const encoder = config.ENCODE_PATH || encodeURI;
 
 	const path = options.url

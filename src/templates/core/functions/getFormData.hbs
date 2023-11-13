@@ -1,8 +1,8 @@
-export const getFormData = (options: ApiRequestOptions): FormData | undefined => {
+export const getFormData = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>): FormData | undefined => {
 	if (options.formData) {
 		const formData = new FormData();
 
-		const process = (key: string, value: any) => {
+		const process = (key: string, value: unknown) => {
 			if (isString(value) || isBlob(value)) {
 				formData.append(key, value);
 			} else {

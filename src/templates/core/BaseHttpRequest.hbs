@@ -1,7 +1,7 @@
 {{>header}}
 
-import type { HTTPError } from './ApiError';
-import type { ApiResult } from './ApiResult';
+import type { HttpError } from './HttpError';
+import type { ApiResponse } from './ApiResponse';
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { OpenAPIConfig } from './OpenAPI';
 import type { TaskEither } from 'fp-ts/lib/TaskEither';
@@ -11,5 +11,5 @@ export abstract class BaseHttpRequest {
 
 	constructor(public readonly config: OpenAPIConfig) {}
 
-	public abstract request<T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions): TaskEither<HTTPError, ApiResponse<T>>;
+	public abstract request<T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>): TaskEither<HttpError, ApiResponse<T>>;
 }

@@ -1,7 +1,7 @@
 {{>functions/convertRequestBody}}
 
 
-export const getRequestBody = (options: ApiRequestOptions): any => {
+export const getRequestBody = <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>) => {
 	if (options.body !== undefined) {
 		const body = convertRequestBody(options.body);
 		if (options.mediaType?.includes('/json')) {

@@ -1,6 +1,10 @@
-export const isBlob = (value: any): value is Blob => {
+export const isBlob = (value: unknown): value is Blob => {
 	return (
 		typeof value === 'object' &&
+		value !== null &&
+		'type' in value &&
+		'stream' in value &&
+		'arrayBuffer' in value &&
 		typeof value.type === 'string' &&
 		typeof value.stream === 'function' &&
 		typeof value.arrayBuffer === 'function' &&

@@ -1,26 +1,20 @@
-export const sendRequest = async (
+export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
 	config: OpenAPIConfig,
-	options: ApiRequestOptions,
+	options: ApiRequestOptions<T>,
 	url: string,
-	body: any,
+	body: string | undefined | Blob | FormData,
 	formData: FormData | undefined,
 	headers: Headers,
-	onCancel: OnCancel
 ): Promise<Response> => {
-	const controller = new AbortController();
-
 	const request: RequestInit = {
 		headers,
 		body: body ?? formData,
 		method: options.method,
-		signal: controller.signal,
 	};
 
 	if (config.WITH_CREDENTIALS) {
 		request.credentials = config.CREDENTIALS;
 	}
-
-	onCancel(() => controller.abort());
 
 	return await fetch(url, request);
 };

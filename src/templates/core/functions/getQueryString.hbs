@@ -1,17 +1,17 @@
-export const getQueryString = (params: Record<string, any>): string => {
+export const getQueryString = (params: Record<string, unknown>): string => {
 	const qs: string[] = [];
 
-	const append = (key: string, value: any) => {
+	const append = (key: string, value: unknown) => {
 		qs.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
 	};
 
-	const process = (key: string, value: any) => {
+	const process = (key: string, value: unknown) => {
 		if (isDefined(value)) {
 			if (Array.isArray(value)) {
 				value.forEach(v => {
 					process(key, v);
 				});
-			} else if (typeof value === 'object') {
+			} else if (typeof value === 'object' && value !== null) {
 				Object.entries(value).forEach(([k, v]) => {
 					process(`${key}[${k}]`, v);
 				});

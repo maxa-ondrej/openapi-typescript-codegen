@@ -1,11 +1,10 @@
-export const sendRequest = async (
+export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
 	config: OpenAPIConfig,
-	options: ApiRequestOptions,
+	options: ApiRequestOptions<T>,
 	url: string,
-	body: any,
+	body: string | undefined | Blob | FormData,
 	formData: FormData | undefined,
 	headers: Headers,
-	onCancel: OnCancel
 ): Promise<XMLHttpRequest> => {
 	const xhr = new XMLHttpRequest();
 	xhr.open(options.method, url, true);
@@ -20,7 +19,5 @@ export const sendRequest = async (
 		xhr.onabort = () => reject(new Error('Request aborted'));
 		xhr.onerror = () => reject(new Error('Network error'));
 		xhr.send(body ?? formData);
-
-		onCancel(() => xhr.abort());
 	});
 };

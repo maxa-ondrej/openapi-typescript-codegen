@@ -3,7 +3,7 @@
 import type { ApiRequestOptions } from './ApiRequestOptions';
 import type * as D from '@majkit/fp-ts-schema';
 
-type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<any>>>) => Promise<T>;
+type Resolver<T> = (options: ApiRequestOptions<Record<number, D.Decoder<unknown>>>) => Promise<T>;
 type Headers = Record<string, string>;
 
 export type OpenAPIConfig = {

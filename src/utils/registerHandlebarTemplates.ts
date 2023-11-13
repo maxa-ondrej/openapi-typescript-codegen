@@ -2,11 +2,11 @@ import Handlebars from 'handlebars/runtime';
 
 import { HttpClient } from '../HttpClient';
 import templateClient from '../templates/client.hbs';
-import templateCoreApiError from '../templates/core/ApiError.hbs';
 import templateCoreApiRequestOptions from '../templates/core/ApiRequestOptions.hbs';
 import templateCoreApiResponse from '../templates/core/ApiResponse.hbs';
 import templateCoreApiResult from '../templates/core/ApiResult.hbs';
 import templateCoreBaseHttpRequest from '../templates/core/BaseHttpRequest.hbs';
+import templateCoreHttpError from '../templates/core/HttpError.hbs';
 import templateCoreHttpRequest from '../templates/core/HttpRequest.hbs';
 import templateCoreSettings from '../templates/core/OpenAPI.hbs';
 import axiosGetHeaders from '../templates/core/axios/getHeaders.hbs';
@@ -22,7 +22,6 @@ import fetchGetResponseHeader from '../templates/core/fetch/getResponseHeader.hb
 import fetchRequest from '../templates/core/fetch/request.hbs';
 import fetchSendRequest from '../templates/core/fetch/sendRequest.hbs';
 import functionBase64 from '../templates/core/functions/base64.hbs';
-import functionCatchErrorCodes from '../templates/core/functions/catchErrorCodes.hbs';
 import functionConvertRequestBody from '../templates/core/functions/convertRequestBody.hbs';
 import functionDecodeResponse from '../templates/core/functions/decodeResponse.hbs';
 import functionGetFormData from '../templates/core/functions/getFormData.hbs';
@@ -87,12 +86,12 @@ export interface Templates {
   };
   core: {
     settings: Handlebars.TemplateDelegate;
-    apiError: Handlebars.TemplateDelegate;
     apiRequestOptions: Handlebars.TemplateDelegate;
     apiResponse: Handlebars.TemplateDelegate;
     apiResult: Handlebars.TemplateDelegate;
     request: Handlebars.TemplateDelegate;
     baseHttpRequest: Handlebars.TemplateDelegate;
+    httpError: Handlebars.TemplateDelegate;
     httpRequest: Handlebars.TemplateDelegate;
   };
 }
@@ -118,12 +117,12 @@ export const registerHandlebarTemplates = (root: {
     },
     core: {
       settings: Handlebars.template(templateCoreSettings),
-      apiError: Handlebars.template(templateCoreApiError),
       apiRequestOptions: Handlebars.template(templateCoreApiRequestOptions),
       apiResponse: Handlebars.template(templateCoreApiResponse),
       apiResult: Handlebars.template(templateCoreApiResult),
       request: Handlebars.template(templateCoreRequest),
       baseHttpRequest: Handlebars.template(templateCoreBaseHttpRequest),
+      httpError: Handlebars.template(templateCoreHttpError),
       httpRequest: Handlebars.template(templateCoreHttpRequest),
     },
   };
@@ -154,7 +153,6 @@ export const registerHandlebarTemplates = (root: {
   Handlebars.registerPartial('base', Handlebars.template(partialBase));
 
   // Generic functions used in 'request' file @see src/templates/core/request.hbs for more info
-  Handlebars.registerPartial('functions/catchErrorCodes', Handlebars.template(functionCatchErrorCodes));
   Handlebars.registerPartial('functions/convertRequestBody', Handlebars.template(functionConvertRequestBody));
   Handlebars.registerPartial('functions/decodeResponse', Handlebars.template(functionDecodeResponse));
   Handlebars.registerPartial('functions/getFormData', Handlebars.template(functionGetFormData));

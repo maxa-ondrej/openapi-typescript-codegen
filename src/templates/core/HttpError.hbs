@@ -1,0 +1,12 @@
+{{>header}}
+
+export class HttpError extends Error {
+	cause: unknown;
+
+	constructor(originalError: unknown) {
+		super(`${originalError}`);
+
+		this.cause = originalError;
+		this.name = 'HttpError';
+	}
+}

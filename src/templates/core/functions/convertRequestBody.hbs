@@ -1,11 +1,11 @@
-const flattenOption = (body: unknown): any =>
+const flattenOption = (body: unknown): unknown =>
     typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
     && (body._tag === 'None' || body._tag === 'Some')
     ? body._tag === 'Some' && 'value' in body
     ? body.value : undefined
     : body;
 
-const convertRequestBody = (body: unknown): any =>
+const convertRequestBody = (body: unknown): unknown =>
     typeof body === 'object' && body !== null
         ? (() => {
             const flattened = flattenOption(body);

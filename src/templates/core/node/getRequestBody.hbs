@@ -1,13 +1,15 @@
 {{>functions/convertRequestBody}}
 
 
-export const getRequestBody = (options: ApiRequestOptions): any => {
+export const getRequestBody = async <T extends Record<number,D.Decoder<unknown>>>(options: ApiRequestOptions<T>) => {
 	if (options.body !== undefined) {
 		const body = convertRequestBody(options.body);
 		if (options.mediaType?.includes('/json')) {
 			return JSON.stringify(body)
-		} else if (isString(body) || isBlob(body) || isFormData(body)) {
-			return body as any;
+		} else if (isString(body) || isFormData(body)) {
+			return body;
+		} else if (isBlob(body)) {
+			return await body.arrayBuffer();
 		} else {
 			return JSON.stringify(body);
 		}

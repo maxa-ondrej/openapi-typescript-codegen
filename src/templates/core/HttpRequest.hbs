@@ -4,6 +4,7 @@ import type { ApiRequestOptions } from './ApiRequestOptions';
 import { BaseHttpRequest } from './BaseHttpRequest';
 import type { OpenAPIConfig } from './OpenAPI';
 import { request as __request } from './request';
+import type { Decoder } from '@majkit/fp-ts-schema';
 
 export class {{httpRequest}} extends BaseHttpRequest {
 
@@ -15,7 +16,7 @@ export class {{httpRequest}} extends BaseHttpRequest {
 	 * Request method
 	 * @param options The request options from the service
 	 */
-	public override request<T>(options: ApiRequestOptions) {
+	public override request<T extends Record<number,Decoder<unknown>>>(options: ApiRequestOptions<T>) {
 		return __request(this.config, options);
 	}
 }

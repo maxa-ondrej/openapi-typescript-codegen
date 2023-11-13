@@ -29,12 +29,12 @@ describe('writeClientCore', () => {
       },
       core: {
         settings: () => 'settings',
-        apiError: () => 'apiError',
         apiRequestOptions: () => 'apiRequestOptions',
         apiResponse: () => 'apiResponse',
         apiResult: () => 'apiResult',
         request: () => 'request',
         baseHttpRequest: () => 'baseHttpRequest',
+        httpError: () => 'httpError',
         httpRequest: () => 'httpRequest',
       },
     };
@@ -44,7 +44,7 @@ describe('writeClientCore', () => {
     await writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4, 'MyClient');
 
     expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
-    expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/HttpError.ts'), `httpError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiRequestOptions.ts'), `apiRequestOptions${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResponse.ts'), `apiResponse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
@@ -55,11 +55,11 @@ describe('writeClientCore', () => {
     await writeClientCore(client, templates, '/', HttpClient.FETCH, Indent.SPACE_4, 'MyClient', 'request-copy.ts');
 
     expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
-    expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiRequestOptions.ts'), `apiRequestOptions${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResponse.ts'), `apiResponse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/HttpError.ts'), `httpError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/BaseHttpRequest.ts'), `baseHttpRequest${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/FetchHttpRequest.ts'), `httpRequest${EOL}`);
 
