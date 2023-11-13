@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@majkit/fp-ts-schema':
-    specifier: ^1.1.4
-    version: 1.1.4(fp-ts@2.16.1)
+    specifier: ^1.1.5
+    version: 1.1.5(fp-ts@2.16.1)
   camelcase:
     specifier: ^6.3.0
     version: 6.3.0
@@ -3501,8 +3501,8 @@ packages:
     resolution: {integrity: sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==}
     dev: true
 
-  /@majkit/fp-ts-schema@1.1.4(fp-ts@2.16.1):
-    resolution: {integrity: sha512-rpJFlzJY4epzjD+hns4OhNeK+lu7vlMRVhUBahr+NQcrSHCQkUOf+GNAt3nq8Vsu4Mf1j9N1iw6onVsoQqHzBA==}
+  /@majkit/fp-ts-schema@1.1.5(fp-ts@2.16.1):
+    resolution: {integrity: sha512-A+n5dY6OWoHJH2/s8M1hMCuZ+FY1DTA/mGgRjIw21rGpjV0HJD2NN+3A8QBUo1oTDpDlukOV1SWr8ysLGW6QxQ==}
     peerDependencies:
       fp-ts: ^2.16.1
     dependencies:
