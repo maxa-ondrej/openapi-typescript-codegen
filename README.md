@@ -24,7 +24,7 @@
 ## Install
 
 ```
-pnpm install @majkit/openapi -D
+pnpm install @majkit/openapi @majkit/fp-ts-schema -D
 ```
 
 ## Usage
