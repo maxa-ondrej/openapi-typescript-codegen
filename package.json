@@ -12,7 +12,18 @@
     "url": "https://github.com/maxa-ondrej/openapi-typescript-codegen/issues"
   },
   "license": "MIT",
-  "keywords": ["openapi", "swagger", "generator", "typescript", "yaml", "json", "fetch", "xhr", "axios", "node"],
+  "keywords": [
+    "openapi",
+    "swagger",
+    "generator",
+    "typescript",
+    "yaml",
+    "json",
+    "fetch",
+    "xhr",
+    "axios",
+    "node"
+  ],
   "maintainers": [
     {
       "name": "Ondrej Maxa",
@@ -24,7 +35,11 @@
   "bin": {
     "openapi": "bin/index.js"
   },
-  "files": ["bin/index.js", "dist/index.js", "types/index.d.ts"],
+  "files": [
+    "bin/index.js",
+    "dist/index.js",
+    "types/index.d.ts"
+  ],
   "scripts": {
     "clean": "rimraf ./dist ./test/generated ./test/e2e/generated ./samples/generated ./coverage ./node_modules/.cache",
     "build": "rollup --config --environment NODE_ENV:development",
@@ -95,6 +110,7 @@
     "glob": "10.3.10",
     "jest": "29.7.0",
     "jest-cli": "29.7.0",
+    "jest-junit": "^16.0.0",
     "node-fetch": "2.6.9",
     "prettier": "3.0.3",
     "puppeteer": "20.9.0",

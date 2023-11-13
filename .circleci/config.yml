@@ -25,7 +25,7 @@ jobs:
           command: pnpm run prepublish
       - run:
           name: Run unit tests
-          command: pnpm jest --ci --runInBand --reporters=default --reporters=jest-junit --coverage
+          command: pnpm jest --ci --runInBand --reporters=default --reporters=jest-junit --coverage --selectProjects UNIT
           environment:
             JEST_JUNIT_OUTPUT_DIR: ./reports/
             JEST_JUNIT_ADD_FILE_ATTRIBUTE: "true"
