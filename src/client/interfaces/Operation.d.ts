@@ -10,7 +10,6 @@ export interface Operation extends OperationParameters {
   deprecated: boolean;
   method: string;
   path: string;
-  errors: OperationError[];
   results: OperationResponse[];
   responseHeader: string | null;
 }

@@ -3,7 +3,6 @@ import type { OperationParameters } from '../../../client/interfaces/OperationPa
 import type { OpenApi } from '../interfaces/OpenApi';
 import type { OpenApiOperation } from '../interfaces/OpenApiOperation';
 import type { OpenApiRequestBody } from '../interfaces/OpenApiRequestBody';
-import { getOperationErrors } from './getOperationErrors';
 import { getOperationName } from './getOperationName';
 import { getOperationParameters } from './getOperationParameters';
 import { getOperationRequestBody } from './getOperationRequestBody';
@@ -42,7 +41,6 @@ export const getOperation = (
     parametersCookie: [...pathParams.parametersCookie],
     parametersBody: pathParams.parametersBody,
     imports: [],
-    errors: [],
     results: [],
     responseHeader: null,
   };
@@ -72,7 +70,6 @@ export const getOperation = (
   if (op.responses) {
     const operationResponses = getOperationResponses(openApi, op.responses);
     const operationResults = getOperationResults(operationResponses);
-    operation.errors = getOperationErrors(operationResponses);
     operation.responseHeader = getOperationResponseHeader(operationResults);
 
     const types = {

@@ -31,8 +31,8 @@ describe('writeClientCore', () => {
         settings: () => 'settings',
         apiError: () => 'apiError',
         apiRequestOptions: () => 'apiRequestOptions',
+        apiResponse: () => 'apiResponse',
         apiResult: () => 'apiResult',
-        cancelablePromise: () => 'cancelablePromise',
         request: () => 'request',
         baseHttpRequest: () => 'baseHttpRequest',
         httpRequest: () => 'httpRequest',
@@ -46,8 +46,8 @@ describe('writeClientCore', () => {
     expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiRequestOptions.ts'), `apiRequestOptions${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/ApiResponse.ts'), `apiResponse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
-    expect(writeFile).toBeCalledWith(resolve('/', '/CancelablePromise.ts'), `cancelablePromise${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
 
     // @ts-ignore
@@ -57,8 +57,8 @@ describe('writeClientCore', () => {
     expect(writeFile).toBeCalledWith(resolve('/', '/OpenAPI.ts'), `settings${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiError.ts'), `apiError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiRequestOptions.ts'), `apiRequestOptions${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/ApiResponse.ts'), `apiResponse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
-    expect(writeFile).toBeCalledWith(resolve('/', '/CancelablePromise.ts'), `cancelablePromise${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/BaseHttpRequest.ts'), `baseHttpRequest${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/FetchHttpRequest.ts'), `httpRequest${EOL}`);

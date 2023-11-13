@@ -1,14 +1,5 @@
 {{>header}}
 
-import type * as D from '@majkit/fp-ts-schema';
-
-export type ApiResponse<T extends Record<number,D.Decoder<any>>> = {
-	[key in keyof T]: {
-		readonly status: key;
-		readonly body: key extends number ? D.Output<T[key]> : never;
-	};
-}[keyof T];
-
 export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
 	readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
 	readonly url: string;
@@ -19,7 +10,7 @@ export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
 	readonly formData?: Record<string, any>;
 	readonly body?: any;
 	readonly mediaType?: string;
-	readonly responseDecoders?: T;
+	readonly decoders?: T;
 	readonly responseHeader?: string;
 	readonly errors?: Record<number, string>;
 };

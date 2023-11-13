@@ -9,44 +9,50 @@ const areEqual = (a: Model, b: Model): boolean => {
   return equal;
 };
 
-export const getOperationResults = (operationResponses: OperationResponse[]): OperationResponse[] => {
-  const operationResults: OperationResponse[] = [];
-
-  // Filter out success response codes, but skip "204 No Content"
-  operationResponses.forEach((operationResponse) => {
-    const { code } = operationResponse;
-    if (code !== 204 && ((code >= 200 && code < 300) || code === 0)) {
-      operationResults.push(operationResponse);
-    }
-  });
-
-  if (!operationResults.length) {
-    operationResults.push({
-      in: 'response',
-      name: '',
-      code: 200,
-      description: '',
-      export: 'generic',
-      type: 'void',
-      base: 'void',
-      template: null,
-      link: null,
-      isDefinition: false,
-      isReadOnly: false,
-      isRequired: false,
-      isNullable: false,
-      imports: [],
-      enum: [],
-      enums: [],
-      properties: [],
-    });
-  }
-
-  return operationResults.filter((operationResult, index, arr) => {
-    return (
-      arr.findIndex((item) => {
-        return areEqual(item, operationResult);
-      }) === index
-    );
-  });
+export const getOperationResults = (operationResults: OperationResponse[]): OperationResponse[] => {
+  return operationResults.length === 0
+    ? [
+        {
+          in: 'response',
+          name: '',
+          code: 0,
+          description: '',
+          export: 'generic',
+          type: 'void',
+          base: 'void',
+          template: null,
+          link: null,
+          isDefinition: false,
+          isReadOnly: false,
+          isRequired: false,
+          isNullable: false,
+          imports: [],
+          enum: [],
+          enums: [],
+          properties: [],
+        },
+      ]
+    : operationResults.map(($) =>
+        $.code === 204
+          ? {
+              in: 'response',
+              name: '',
+              code: 204,
+              description: '',
+              export: 'generic',
+              type: 'void',
+              base: 'void',
+              template: null,
+              link: null,
+              isDefinition: false,
+              isReadOnly: false,
+              isRequired: false,
+              isNullable: false,
+              imports: [],
+              enum: [],
+              enums: [],
+              properties: [],
+            }
+          : $,
+      );
 };

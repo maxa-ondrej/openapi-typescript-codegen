@@ -1,0 +1,8 @@
+const decodeResponse = <T extends Record<number,D.Decoder<unknown>>>(result: ApiResult, options: ApiRequestOptions<T>): ApiResponse<T> => {
+	const decoder = options.decoders[result.status] ?? options.decoders[0] ?? D.unknown;
+	const body = decoder.decode(result.data);
+	return {
+		status: result.status,
+		body: body,
+	};
+}

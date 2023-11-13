@@ -14,9 +14,7 @@ D.string
 {{~else equals base 'void'~}}
 D.succeed<void>(undefined)
 {{~else equals base 'any'~}}
-D.createDecoder<unknown>({
-	forceDecode: (data) => data,
-})
+D.unknown
 {{~else equals base 'date'~}}
 D.createDecoder<Date>({
 	forceDecode: (data) => {

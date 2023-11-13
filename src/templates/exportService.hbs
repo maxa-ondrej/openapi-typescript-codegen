@@ -96,16 +96,9 @@ export class {{{name}}}{{{@root.postfix}}} {
 			responseHeader: '{{{responseHeader}}}',
 			{{/if}}
 			{{#if results}}
-			responseDecoders: {
+			decoders: {
 				{{#each results}}
 				{{{code}}}: {{>type}},
-				{{/each}}
-			},
-			{{/if}}
-			{{#if errors}}
-			errors: {
-				{{#each errors}}
-				{{{code}}}: `{{{escapeDescription description}}}`,
 				{{/each}}
 			},
 			{{/if}}

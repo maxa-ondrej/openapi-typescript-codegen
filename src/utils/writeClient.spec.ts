@@ -1,6 +1,6 @@
-import type { Client } from '../client/interfaces/Client';
 import { HttpClient } from '../HttpClient';
 import { Indent } from '../Indent';
+import type { Client } from '../client/interfaces/Client';
 import { mkdir, rmdir, writeFile } from './fileSystem';
 import type { Templates } from './registerHandlebarTemplates';
 import { writeClient } from './writeClient';
@@ -28,8 +28,8 @@ describe('writeClient', () => {
         settings: () => 'settings',
         apiError: () => 'apiError',
         apiRequestOptions: () => 'apiRequestOptions',
+        apiResponse: () => 'apiResponse',
         apiResult: () => 'apiResult',
-        cancelablePromise: () => 'cancelablePromise',
         request: () => 'request',
         baseHttpRequest: () => 'baseHttpRequest',
         httpRequest: () => 'httpRequest',

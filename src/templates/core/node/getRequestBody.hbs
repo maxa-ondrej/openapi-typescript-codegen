@@ -1,11 +1,15 @@
+{{>functions/convertRequestBody}}
+
+
 export const getRequestBody = (options: ApiRequestOptions): any => {
 	if (options.body !== undefined) {
+		const body = convertRequestBody(options.body);
 		if (options.mediaType?.includes('/json')) {
-			return JSON.stringify(options.body)
-		} else if (isString(options.body) || isBlob(options.body) || isFormData(options.body)) {
-			return options.body as any;
+			return JSON.stringify(body)
+		} else if (isString(body) || isBlob(body) || isFormData(body)) {
+			return body as any;
 		} else {
-			return JSON.stringify(options.body);
+			return JSON.stringify(body);
 		}
 	}
 	return undefined;

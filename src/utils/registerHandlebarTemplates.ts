@@ -4,15 +4,17 @@ import { HttpClient } from '../HttpClient';
 import templateClient from '../templates/client.hbs';
 import templateCoreApiError from '../templates/core/ApiError.hbs';
 import templateCoreApiRequestOptions from '../templates/core/ApiRequestOptions.hbs';
+import templateCoreApiResponse from '../templates/core/ApiResponse.hbs';
 import templateCoreApiResult from '../templates/core/ApiResult.hbs';
+import templateCoreBaseHttpRequest from '../templates/core/BaseHttpRequest.hbs';
+import templateCoreHttpRequest from '../templates/core/HttpRequest.hbs';
+import templateCoreSettings from '../templates/core/OpenAPI.hbs';
 import axiosGetHeaders from '../templates/core/axios/getHeaders.hbs';
 import axiosGetRequestBody from '../templates/core/axios/getRequestBody.hbs';
 import axiosGetResponseBody from '../templates/core/axios/getResponseBody.hbs';
 import axiosGetResponseHeader from '../templates/core/axios/getResponseHeader.hbs';
 import axiosRequest from '../templates/core/axios/request.hbs';
 import axiosSendRequest from '../templates/core/axios/sendRequest.hbs';
-import templateCoreBaseHttpRequest from '../templates/core/BaseHttpRequest.hbs';
-import templateCancelablePromise from '../templates/core/CancelablePromise.hbs';
 import fetchGetHeaders from '../templates/core/fetch/getHeaders.hbs';
 import fetchGetRequestBody from '../templates/core/fetch/getRequestBody.hbs';
 import fetchGetResponseBody from '../templates/core/fetch/getResponseBody.hbs';
@@ -21,6 +23,8 @@ import fetchRequest from '../templates/core/fetch/request.hbs';
 import fetchSendRequest from '../templates/core/fetch/sendRequest.hbs';
 import functionBase64 from '../templates/core/functions/base64.hbs';
 import functionCatchErrorCodes from '../templates/core/functions/catchErrorCodes.hbs';
+import functionConvertRequestBody from '../templates/core/functions/convertRequestBody.hbs';
+import functionDecodeResponse from '../templates/core/functions/decodeResponse.hbs';
 import functionGetFormData from '../templates/core/functions/getFormData.hbs';
 import functionGetQueryString from '../templates/core/functions/getQueryString.hbs';
 import functionGetUrl from '../templates/core/functions/getUrl.hbs';
@@ -31,14 +35,12 @@ import functionIsString from '../templates/core/functions/isString.hbs';
 import functionIsStringWithValue from '../templates/core/functions/isStringWithValue.hbs';
 import functionIsSuccess from '../templates/core/functions/isSuccess.hbs';
 import functionResolve from '../templates/core/functions/resolve.hbs';
-import templateCoreHttpRequest from '../templates/core/HttpRequest.hbs';
 import nodeGetHeaders from '../templates/core/node/getHeaders.hbs';
 import nodeGetRequestBody from '../templates/core/node/getRequestBody.hbs';
 import nodeGetResponseBody from '../templates/core/node/getResponseBody.hbs';
 import nodeGetResponseHeader from '../templates/core/node/getResponseHeader.hbs';
 import nodeRequest from '../templates/core/node/request.hbs';
 import nodeSendRequest from '../templates/core/node/sendRequest.hbs';
-import templateCoreSettings from '../templates/core/OpenAPI.hbs';
 import templateCoreRequest from '../templates/core/request.hbs';
 import xhrGetHeaders from '../templates/core/xhr/getHeaders.hbs';
 import xhrGetRequestBody from '../templates/core/xhr/getRequestBody.hbs';
@@ -87,8 +89,8 @@ export interface Templates {
     settings: Handlebars.TemplateDelegate;
     apiError: Handlebars.TemplateDelegate;
     apiRequestOptions: Handlebars.TemplateDelegate;
+    apiResponse: Handlebars.TemplateDelegate;
     apiResult: Handlebars.TemplateDelegate;
-    cancelablePromise: Handlebars.TemplateDelegate;
     request: Handlebars.TemplateDelegate;
     baseHttpRequest: Handlebars.TemplateDelegate;
     httpRequest: Handlebars.TemplateDelegate;
@@ -118,8 +120,8 @@ export const registerHandlebarTemplates = (root: {
       settings: Handlebars.template(templateCoreSettings),
       apiError: Handlebars.template(templateCoreApiError),
       apiRequestOptions: Handlebars.template(templateCoreApiRequestOptions),
+      apiResponse: Handlebars.template(templateCoreApiResponse),
       apiResult: Handlebars.template(templateCoreApiResult),
-      cancelablePromise: Handlebars.template(templateCancelablePromise),
       request: Handlebars.template(templateCoreRequest),
       baseHttpRequest: Handlebars.template(templateCoreBaseHttpRequest),
       httpRequest: Handlebars.template(templateCoreHttpRequest),
@@ -153,6 +155,8 @@ export const registerHandlebarTemplates = (root: {
 
   // Generic functions used in 'request' file @see src/templates/core/request.hbs for more info
   Handlebars.registerPartial('functions/catchErrorCodes', Handlebars.template(functionCatchErrorCodes));
+  Handlebars.registerPartial('functions/convertRequestBody', Handlebars.template(functionConvertRequestBody));
+  Handlebars.registerPartial('functions/decodeResponse', Handlebars.template(functionDecodeResponse));
   Handlebars.registerPartial('functions/getFormData', Handlebars.template(functionGetFormData));
   Handlebars.registerPartial('functions/getQueryString', Handlebars.template(functionGetQueryString));
   Handlebars.registerPartial('functions/getUrl', Handlebars.template(functionGetUrl));

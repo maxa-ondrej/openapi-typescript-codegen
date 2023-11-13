@@ -2,7 +2,6 @@ import type { Operation } from '../../../client/interfaces/Operation';
 import type { OperationParameters } from '../../../client/interfaces/OperationParameters';
 import type { OpenApi } from '../interfaces/OpenApi';
 import type { OpenApiOperation } from '../interfaces/OpenApiOperation';
-import { getOperationErrors } from './getOperationErrors';
 import { getOperationName } from './getOperationName';
 import { getOperationParameters } from './getOperationParameters';
 import { getOperationResponseHeader } from './getOperationResponseHeader';
@@ -39,7 +38,6 @@ export const getOperation = (
     parametersCookie: [...pathParams.parametersCookie],
     parametersBody: pathParams.parametersBody,
     imports: [],
-    errors: [],
     results: [],
     responseHeader: null,
   };
@@ -61,13 +59,22 @@ export const getOperation = (
   if (op.responses) {
     const operationResponses = getOperationResponses(openApi, op.responses);
     const operationResults = getOperationResults(operationResponses);
-    operation.errors = getOperationErrors(operationResponses);
     operation.responseHeader = getOperationResponseHeader(operationResults);
 
-    operationResults.forEach((operationResult) => {
-      operation.results.push(operationResult);
-      operation.imports.push(...operationResult.imports);
-    });
+    const types = {
+      'application/json': 1,
+      'x-www-form-urlencoded': 2,
+      'application/xml': 3,
+    } as const;
+
+    operationResults
+      .sort((a, b) => (types[a.type as keyof typeof types] ?? 4) - (types[b.type as keyof typeof types] ?? 4))
+      .filter(($, i1, arr) => arr.filter(({ code }, i2) => i1 > i2 && code === $.code).length === 0)
+      .sort((a, b) => a.code - b.code)
+      .forEach((operationResult) => {
+        operation.results.push(operationResult);
+        operation.imports.push(...operationResult.imports);
+      });
   }
 
   operation.parameters = operation.parameters.sort(sortByRequired);

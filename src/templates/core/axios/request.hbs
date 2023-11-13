@@ -4,13 +4,14 @@ import axios from 'axios';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
 import FormData from 'form-data';
 
-import { ApiError } from './ApiError';
-import type { ApiRequestOptions, ApiResponse } from './ApiRequestOptions';
+import * as D from '@majkit/fp-ts-schema';
+import { ApiError, HTTPError } from './ApiError';
+import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
-import { CancelablePromise } from './CancelablePromise';
-import type { OnCancel } from './CancelablePromise';
+import type { ApiResponse } from './ApiResponse';
 import type { OpenAPIConfig } from './OpenAPI';
-import { either } from 'fp-ts';
+import { right, left } from 'fp-ts/lib/Either';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
 
 {{>functions/isDefined}}
 
@@ -60,34 +61,7 @@ import { either } from 'fp-ts';
 {{>axios/getResponseBody}}
 
 
-{{>functions/catchErrorCodes}}
-
-const flattenOption = (body: unknown): any =>
-    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
-    && (body._tag === 'None' || body._tag === 'Some')
-    ? body._tag === 'Some' && 'value' in body
-    ? body.value : undefined
-    : body;
-
-const convertRequestBody = (body: unknown): any =>
-    typeof body === 'object' && body !== null
-        ? (() => {
-            const flattened = flattenOption(body);
-            if (flattened === undefined) {
-                return undefined;
-            }
-            if (Array.isArray(flattened)) {
-                return flattened.map(value => convertRequestBody(value));
-            }
-            if (isBlob(flattened) || isFormData(flattened)) {
-                return flattened;
-            }
-            if (typeof flattened === 'object' && flattened !== null) {
-                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
-            }
-            return flattened;
-        })()
-        : body;
+{{>functions/decodeResponse}}
 
 /**
  * Request method
@@ -95,34 +69,26 @@ const convertRequestBody = (body: unknown): any =>
  * @param options The request options from the service
  * @param axiosClient The axios client instance to use
  */
-export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions<T>, axiosClient: AxiosInstance = axios): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
-	return new CancelablePromise(async (resolve, reject, onCancel) => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>, axiosClient: AxiosInstance = axios): TaskEither<HTTPError, ApiResponse<T>> => {
+	return async () => {
 		try {
-			options = convertRequestBody(options);
 			const url = getUrl(config, options);
 			const formData = getFormData(options);
 			const body = getRequestBody(options);
 			const headers = await getHeaders(config, options, formData);
-
-			if (!onCancel.isCancelled) {
-				const response = await sendRequest<T>(config, options, url, body, formData, headers, onCancel, axiosClient);
-				const responseBody = getResponseBody(response);
-				const responseHeader = getResponseHeader(response, options.responseHeader);
-
-				const result: ApiResult = {
-					url,
-					ok: isSuccess(response.status),
-					status: response.status,
-					statusText: response.statusText,
-					body: responseHeader ?? responseBody,
-				};
-
-				catchErrorCodes(options, result);
-
-				resolve(options.responseDecoders[response.status].decode(result.body));
-			}
+			const response = await sendRequest<T>(config, options, url, body, formData, headers, onCancel, axiosClient);
+			const responseBody = getResponseBody(response);
+			const responseHeader = getResponseHeader(response, options.responseHeader);
+			const result: ApiResult = {
+				url,
+				ok: isSuccess(response.status),
+				status: response.status,
+				statusText: response.statusText,
+				body: responseHeader ?? responseBody,
+			};
+			return right(decodeResponse(result, options));
 		} catch (error) {
-			resolve(either.left(error as ApiError));
+			return left(new HTTPError(error));
 		}
-	});
+	};
 };

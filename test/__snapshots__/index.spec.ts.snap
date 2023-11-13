@@ -27,6 +27,17 @@ export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
         this.request = request;
     }
 }
+
+export class HTTPError extends Error {
+    cause: unknown;
+
+    constructor(originalError: unknown) {
+        super(\`\${originalError}\`);
+
+        this.cause = originalError;
+        this.name = 'HTTPError';
+    }
+}
 "
 `;
 
@@ -35,15 +46,6 @@ exports[`v2 should generate: test/generated/v2/core/ApiRequestOptions.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type * as D from '@majkit/fp-ts-schema';
-
-export type ApiResponse<T extends Record<number,D.Decoder<any>>> = {
-    [key in keyof T]: {
-        readonly status: key;
-        readonly body: key extends number ? D.Output<T[key]> : never;
-    };
-}[keyof T];
-
 export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
     readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
     readonly url: string;
@@ -54,10 +56,27 @@ export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
     readonly formData?: Record<string, any>;
     readonly body?: any;
     readonly mediaType?: string;
-    readonly responseDecoders?: T;
+    readonly decoders?: T;
     readonly responseHeader?: string;
     readonly errors?: Record<number, string>;
 };
+"
+`;
+
+exports[`v2 should generate: test/generated/v2/core/ApiResponse.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { Decoder, Output, DecoderError } from '@majkit/fp-ts-schema';
+import type { Either } from 'fp-ts/lib/Either';
+
+export type ApiResponse<T extends Record<number,Decoder<any>>> = {
+    [key in keyof T]: key extends number ? Either<DecoderError, {
+        readonly status: key extends 0 ? number : key;
+        readonly body: Output<T[key]>;
+    }> : never;
+}[keyof T];
 "
 `;
 
@@ -73,141 +92,6 @@ export type ApiResult = {
     readonly statusText: string;
     readonly body: any;
 };
-"
-`;
-
-exports[`v2 should generate: test/generated/v2/core/CancelablePromise.ts 1`] = `
-"/* generated using openapi-typescript-codegen -- do no edit */
-/* istanbul ignore file */
-/* tslint:disable */
-/* eslint-disable */
-export class CancelError extends Error {
-
-    constructor(message: string) {
-        super(message);
-        this.name = 'CancelError';
-    }
-
-    public get isCancelled(): boolean {
-        return true;
-    }
-}
-
-export interface OnCancel {
-    readonly isResolved: boolean;
-    readonly isRejected: boolean;
-    readonly isCancelled: boolean;
-
-    (cancelHandler: () => void): void;
-}
-
-export class CancelablePromise<T> implements Promise<T> {
-    #isResolved: boolean;
-    #isRejected: boolean;
-    #isCancelled: boolean;
-    readonly #cancelHandlers: (() => void)[];
-    readonly #promise: Promise<T>;
-    #resolve?: (value: T | PromiseLike<T>) => void;
-    #reject?: (reason?: any) => void;
-
-    constructor(
-        executor: (
-            resolve: (value: T | PromiseLike<T>) => void,
-            reject: (reason?: any) => void,
-            onCancel: OnCancel
-        ) => void
-    ) {
-        this.#isResolved = false;
-        this.#isRejected = false;
-        this.#isCancelled = false;
-        this.#cancelHandlers = [];
-        this.#promise = new Promise<T>((resolve, reject) => {
-            this.#resolve = resolve;
-            this.#reject = reject;
-
-            const onResolve = (value: T | PromiseLike<T>): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#isResolved = true;
-                if (this.#resolve) this.#resolve(value);
-            };
-
-            const onReject = (reason?: any): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#isRejected = true;
-                if (this.#reject) this.#reject(reason);
-            };
-
-            const onCancel = (cancelHandler: () => void): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#cancelHandlers.push(cancelHandler);
-            };
-
-            Object.defineProperty(onCancel, 'isResolved', {
-                get: (): boolean => this.#isResolved,
-            });
-
-            Object.defineProperty(onCancel, 'isRejected', {
-                get: (): boolean => this.#isRejected,
-            });
-
-            Object.defineProperty(onCancel, 'isCancelled', {
-                get: (): boolean => this.#isCancelled,
-            });
-
-            return executor(onResolve, onReject, onCancel as OnCancel);
-        });
-    }
-
-     get [Symbol.toStringTag]() {
-            return "Cancellable Promise";
-     }
-
-    public then<TResult1 = T, TResult2 = never>(
-        onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
-        onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
-    ): Promise<TResult1 | TResult2> {
-        return this.#promise.then(onFulfilled, onRejected);
-    }
-
-    public catch<TResult = never>(
-        onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
-    ): Promise<T | TResult> {
-        return this.#promise.catch(onRejected);
-    }
-
-    public finally(onFinally?: (() => void) | null): Promise<T> {
-        return this.#promise.finally(onFinally);
-    }
-
-    public cancel(): void {
-        if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-            return;
-        }
-        this.#isCancelled = true;
-        if (this.#cancelHandlers.length) {
-            try {
-                for (const cancelHandler of this.#cancelHandlers) {
-                    cancelHandler();
-                }
-            } catch (error) {
-                console.warn('Cancellation threw an error', error);
-                return;
-            }
-        }
-        this.#cancelHandlers.length = 0;
-        if (this.#reject) this.#reject(new CancelError('Request aborted'));
-    }
-
-    public get isCancelled(): boolean {
-        return this.#isCancelled;
-    }
-}
 "
 `;
 
@@ -253,15 +137,14 @@ exports[`v2 should generate: test/generated/v2/core/request.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import { ApiError } from './ApiError';
-import type { ApiRequestOptions, ApiResponse } from './ApiRequestOptions';
+import * as D from '@majkit/fp-ts-schema';
+import { ApiError, HTTPError } from './ApiError';
+import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
-import { CancelablePromise } from './CancelablePromise';
-import type { OnCancel } from './CancelablePromise';
+import type { ApiResponse } from './ApiResponse';
 import type { OpenAPIConfig } from './OpenAPI';
-import type * as D from '@majkit/fp-ts-schema';
-import { either } from 'fp-ts';
-import type { Either } from 'fp-ts/lib/Either';
+import { right, left } from 'fp-ts/lib/Either';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
 
 export const isDefined = <T>(value: T | null | undefined): value is Exclude<T, null | undefined> => {
     return value !== undefined && value !== null;
@@ -431,14 +314,42 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
     return new Headers(headers);
 };
 
+const flattenOption = (body: unknown): any =>
+    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
+    && (body._tag === 'None' || body._tag === 'Some')
+    ? body._tag === 'Some' && 'value' in body
+    ? body.value : undefined
+    : body;
+
+const convertRequestBody = (body: unknown): any =>
+    typeof body === 'object' && body !== null
+        ? (() => {
+            const flattened = flattenOption(body);
+            if (flattened === undefined) {
+                return undefined;
+            }
+            if (Array.isArray(flattened)) {
+                return flattened.map(convertRequestBody);
+            }
+            if (isBlob(flattened) || isFormData(flattened)) {
+                return flattened;
+            }
+            if (typeof flattened === 'object' && flattened !== null) {
+                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
+            }
+            return flattened;
+        })()
+        : body;
+
 export const getRequestBody = (options: ApiRequestOptions): any => {
     if (options.body !== undefined) {
+        const body = convertRequestBody(options.body);
         if (options.mediaType?.includes('/json')) {
-            return JSON.stringify(options.body)
-        } else if (isString(options.body) || isBlob(options.body) || isFormData(options.body)) {
-            return options.body;
+            return JSON.stringify(body)
+        } else if (isString(body) || isBlob(body) || isFormData(body)) {
+            return body;
         } else {
-            return JSON.stringify(options.body);
+            return JSON.stringify(body);
         }
     }
     return undefined;
@@ -501,101 +412,41 @@ export const getResponseBody = async (response: Response): Promise<any> => {
     return undefined;
 };
 
-export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): void => {
-    const errors: Record<number, string> = {
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        500: 'Internal Server Error',
-        502: 'Bad Gateway',
-        503: 'Service Unavailable',
-        ...options.errors,
-    }
-
-    const error = errors[result.status];
-    if (error) {
-        throw new ApiError(options, result, error);
-    }
-
-    if (!result.ok) {
-        const errorStatus = result.status ?? 'unknown';
-        const errorStatusText = result.statusText ?? 'unknown';
-        const errorBody = (() => {
-            try {
-                return JSON.stringify(result.body, null, 2);
-            } catch (e) {
-                return undefined;
-            }
-        })();
-
-        throw new ApiError(options, result,
-            \`Generic Error: status: \${errorStatus}; status text: \${errorStatusText}; body: \${errorBody}\`
-        );
-    }
-};
-const flattenOption = (body: unknown): any =>
-    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
-    && (body._tag === 'None' || body._tag === 'Some')
-    ? body._tag === 'Some' && 'value' in body
-    ? body.value : undefined
-    : body;
-
-const convertRequestBody = (body: unknown): any =>
-    typeof body === 'object' && body !== null
-        ? (() => {
-            const flattened = flattenOption(body);
-            if (flattened === undefined) {
-                return undefined;
-            }
-            if (Array.isArray(flattened)) {
-                return flattened.map(value => convertRequestBody(value));
-            }
-            if (isBlob(flattened) || isFormData(flattened)) {
-                return flattened;
-            }
-            if (typeof flattened === 'object' && flattened !== null) {
-                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
-            }
-            return flattened;
-        })()
-        : body;
-
+const decodeResponse = <T extends Record<number,D.Decoder<unknown>>>(result: ApiResult, options: ApiRequestOptions<T>): ApiResponse<T> => {
+    const decoder = options.decoders[result.status] ?? options.decoders[0] ?? D.unknown;
+    const body = decoder.decode(result.data);
+    return {
+        status: result.status,
+        body: body,
+    };
+}
 /**
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
  */
-export const request = <T extends Record<number,D.Decoder<any>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
-    return new CancelablePromise(async (resolve, reject, onCancel) => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HTTPError, ApiResponse<T>> => {
+    return async () => {
         try {
-            options = convertRequestBody(options);
             const url = getUrl(config, options);
             const formData = getFormData(options);
             const body = getRequestBody(options);
             const headers = await getHeaders(config, options);
-
-            if (!onCancel.isCancelled) {
-                const response = await sendRequest(config, options, url, body, formData, headers, onCancel);
-                const responseBody = await getResponseBody(response);
-                const responseHeader = getResponseHeader(response, options.responseHeader);
-
-                const result: ApiResult = {
-                    url,
-                    ok: response.ok,
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: responseHeader ?? responseBody,
-                };
-
-                catchErrorCodes(options, result);
-
-                resolve(options.responseDecoders[response.status].decode(result.body));
-            }
+            const response = await sendRequest(options, url, body, formData, headers, onCancel);
+            const responseBody = await getResponseBody(response);
+            const responseHeader = getResponseHeader(response, options.responseHeader);
+            const result: ApiResult = {
+                url,
+                ok: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+                body: responseHeader ?? responseBody,
+            };
+            return right(decodeResponse(result, options));
         } catch (error) {
-            resolve(either.left(error as ApiError));
+            return left(new HTTPError(error));
         }
-    });
+    };
 };
 "
 `;
@@ -2304,12 +2155,10 @@ export class ComplexService {
                 'parameterObject': parameterObject,
                 'parameterReference': parameterReference,
             },
-            responseDecoders: {
+            decoders: {
                 200: D.array(ModelWithString),
-            },
-            errors: {
-                400: \`400 server error\`,
-                500: \`500 server error\`,
+                400: D.unknown,
+                500: D.unknown,
             },
         });
     }
@@ -2546,16 +2395,12 @@ export class ErrorService {
             query: {
                 'status': status,
             },
-            responseDecoders: {
-                200: D.createDecoder<unknown>({
-                    forceDecode: (data) => data,
-                }),
-            },
-            errors: {
-                500: \`Custom message: Internal Server Error\`,
-                501: \`Custom message: Not Implemented\`,
-                502: \`Custom message: Bad Gateway\`,
-                503: \`Custom message: Service Unavailable\`,
+            decoders: {
+                200: D.unknown,
+                500: D.unknown,
+                501: D.unknown,
+                502: D.unknown,
+                503: D.unknown,
             },
         });
     }
@@ -2578,12 +2423,10 @@ export class HeaderService {
             method: 'POST',
             url: '/api/v{api-version}/header',
             responseHeader: 'operation-location',
-            responseDecoders: {
+            decoders: {
                 200: D.string,
-            },
-            errors: {
-                400: \`400 server error\`,
-                500: \`500 server error\`,
+                400: D.unknown,
+                500: D.unknown,
             },
         });
     }
@@ -2605,8 +2448,8 @@ export class MultipleTags1Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/a',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2614,8 +2457,8 @@ export class MultipleTags1Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2637,8 +2480,8 @@ export class MultipleTags2Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/a',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2646,8 +2489,8 @@ export class MultipleTags2Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2669,8 +2512,8 @@ export class MultipleTags3Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2692,8 +2535,8 @@ export class NoContentService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/no-content',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -2805,7 +2648,7 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
             },
         });
@@ -2814,13 +2657,13 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
-            },
-            errors: {
-                500: \`Message for 500 error\`,
-                501: \`Message for 501 error\`,
-                502: \`Message for 502 error\`,
+                201: ModelWithString,
+                202: ModelWithString,
+                500: ModelWithString,
+                501: ModelWithString,
+                502: ModelWithString,
             },
         });
     }
@@ -2828,7 +2671,7 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
                 200: D.object({
                     '@namespace.string': D.optional(D.string),
@@ -2837,11 +2680,9 @@ export class ResponseService {
                 }),
                 201: ModelThatExtends,
                 202: ModelThatExtendsExtends,
-            },
-            errors: {
-                500: \`Message for 500 error\`,
-                501: \`Message for 501 error\`,
-                502: \`Message for 502 error\`,
+                500: ModelWithString,
+                501: ModelWithString,
+                502: ModelWithString,
             },
         });
     }
@@ -2922,9 +2763,7 @@ export class TypesService {
         parameterNumber: D.number,
         parameterString: D.string,
         parameterBoolean: D.boolean,
-        parameterObject: D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        }),
+        parameterObject: D.unknown,
         id: D.optional(D.number),
     });
     public static types(
@@ -2952,13 +2791,11 @@ export class TypesService {
                 'parameterDictionary': parameterDictionary,
                 'parameterEnum': parameterEnum,
             },
-            responseDecoders: {
+            decoders: {
                 200: D.number,
                 201: D.string,
                 202: D.boolean,
-                203: D.createDecoder<unknown>({
-                    forceDecode: (data) => data,
-                }),
+                203: D.unknown,
             },
         });
     }
@@ -2993,6 +2830,17 @@ export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
         this.request = request;
     }
 }
+
+export class HTTPError extends Error {
+    cause: unknown;
+
+    constructor(originalError: unknown) {
+        super(\`\${originalError}\`);
+
+        this.cause = originalError;
+        this.name = 'HTTPError';
+    }
+}
 "
 `;
 
@@ -3001,15 +2849,6 @@ exports[`v3 should generate: test/generated/v3/core/ApiRequestOptions.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type * as D from '@majkit/fp-ts-schema';
-
-export type ApiResponse<T extends Record<number,D.Decoder<any>>> = {
-    [key in keyof T]: {
-        readonly status: key;
-        readonly body: key extends number ? D.Output<T[key]> : never;
-    };
-}[keyof T];
-
 export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
     readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
     readonly url: string;
@@ -3020,10 +2859,27 @@ export type ApiRequestOptions<T extends Record<number,D.Decoder<any>>> = {
     readonly formData?: Record<string, any>;
     readonly body?: any;
     readonly mediaType?: string;
-    readonly responseDecoders?: T;
+    readonly decoders?: T;
     readonly responseHeader?: string;
     readonly errors?: Record<number, string>;
 };
+"
+`;
+
+exports[`v3 should generate: test/generated/v3/core/ApiResponse.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { Decoder, Output, DecoderError } from '@majkit/fp-ts-schema';
+import type { Either } from 'fp-ts/lib/Either';
+
+export type ApiResponse<T extends Record<number,Decoder<any>>> = {
+    [key in keyof T]: key extends number ? Either<DecoderError, {
+        readonly status: key extends 0 ? number : key;
+        readonly body: Output<T[key]>;
+    }> : never;
+}[keyof T];
 "
 `;
 
@@ -3039,141 +2895,6 @@ export type ApiResult = {
     readonly statusText: string;
     readonly body: any;
 };
-"
-`;
-
-exports[`v3 should generate: test/generated/v3/core/CancelablePromise.ts 1`] = `
-"/* generated using openapi-typescript-codegen -- do no edit */
-/* istanbul ignore file */
-/* tslint:disable */
-/* eslint-disable */
-export class CancelError extends Error {
-
-    constructor(message: string) {
-        super(message);
-        this.name = 'CancelError';
-    }
-
-    public get isCancelled(): boolean {
-        return true;
-    }
-}
-
-export interface OnCancel {
-    readonly isResolved: boolean;
-    readonly isRejected: boolean;
-    readonly isCancelled: boolean;
-
-    (cancelHandler: () => void): void;
-}
-
-export class CancelablePromise<T> implements Promise<T> {
-    #isResolved: boolean;
-    #isRejected: boolean;
-    #isCancelled: boolean;
-    readonly #cancelHandlers: (() => void)[];
-    readonly #promise: Promise<T>;
-    #resolve?: (value: T | PromiseLike<T>) => void;
-    #reject?: (reason?: any) => void;
-
-    constructor(
-        executor: (
-            resolve: (value: T | PromiseLike<T>) => void,
-            reject: (reason?: any) => void,
-            onCancel: OnCancel
-        ) => void
-    ) {
-        this.#isResolved = false;
-        this.#isRejected = false;
-        this.#isCancelled = false;
-        this.#cancelHandlers = [];
-        this.#promise = new Promise<T>((resolve, reject) => {
-            this.#resolve = resolve;
-            this.#reject = reject;
-
-            const onResolve = (value: T | PromiseLike<T>): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#isResolved = true;
-                if (this.#resolve) this.#resolve(value);
-            };
-
-            const onReject = (reason?: any): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#isRejected = true;
-                if (this.#reject) this.#reject(reason);
-            };
-
-            const onCancel = (cancelHandler: () => void): void => {
-                if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-                    return;
-                }
-                this.#cancelHandlers.push(cancelHandler);
-            };
-
-            Object.defineProperty(onCancel, 'isResolved', {
-                get: (): boolean => this.#isResolved,
-            });
-
-            Object.defineProperty(onCancel, 'isRejected', {
-                get: (): boolean => this.#isRejected,
-            });
-
-            Object.defineProperty(onCancel, 'isCancelled', {
-                get: (): boolean => this.#isCancelled,
-            });
-
-            return executor(onResolve, onReject, onCancel as OnCancel);
-        });
-    }
-
-     get [Symbol.toStringTag]() {
-            return "Cancellable Promise";
-     }
-
-    public then<TResult1 = T, TResult2 = never>(
-        onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
-        onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
-    ): Promise<TResult1 | TResult2> {
-        return this.#promise.then(onFulfilled, onRejected);
-    }
-
-    public catch<TResult = never>(
-        onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
-    ): Promise<T | TResult> {
-        return this.#promise.catch(onRejected);
-    }
-
-    public finally(onFinally?: (() => void) | null): Promise<T> {
-        return this.#promise.finally(onFinally);
-    }
-
-    public cancel(): void {
-        if (this.#isResolved || this.#isRejected || this.#isCancelled) {
-            return;
-        }
-        this.#isCancelled = true;
-        if (this.#cancelHandlers.length) {
-            try {
-                for (const cancelHandler of this.#cancelHandlers) {
-                    cancelHandler();
-                }
-            } catch (error) {
-                console.warn('Cancellation threw an error', error);
-                return;
-            }
-        }
-        this.#cancelHandlers.length = 0;
-        if (this.#reject) this.#reject(new CancelError('Request aborted'));
-    }
-
-    public get isCancelled(): boolean {
-        return this.#isCancelled;
-    }
-}
 "
 `;
 
@@ -3219,15 +2940,14 @@ exports[`v3 should generate: test/generated/v3/core/request.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import { ApiError } from './ApiError';
-import type { ApiRequestOptions, ApiResponse } from './ApiRequestOptions';
+import * as D from '@majkit/fp-ts-schema';
+import { ApiError, HTTPError } from './ApiError';
+import type { ApiRequestOptions } from './ApiRequestOptions';
 import type { ApiResult } from './ApiResult';
-import { CancelablePromise } from './CancelablePromise';
-import type { OnCancel } from './CancelablePromise';
+import type { ApiResponse } from './ApiResponse';
 import type { OpenAPIConfig } from './OpenAPI';
-import type * as D from '@majkit/fp-ts-schema';
-import { either } from 'fp-ts';
-import type { Either } from 'fp-ts/lib/Either';
+import { right, left } from 'fp-ts/lib/Either';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
 
 export const isDefined = <T>(value: T | null | undefined): value is Exclude<T, null | undefined> => {
     return value !== undefined && value !== null;
@@ -3397,14 +3117,42 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
     return new Headers(headers);
 };
 
+const flattenOption = (body: unknown): any =>
+    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
+    && (body._tag === 'None' || body._tag === 'Some')
+    ? body._tag === 'Some' && 'value' in body
+    ? body.value : undefined
+    : body;
+
+const convertRequestBody = (body: unknown): any =>
+    typeof body === 'object' && body !== null
+        ? (() => {
+            const flattened = flattenOption(body);
+            if (flattened === undefined) {
+                return undefined;
+            }
+            if (Array.isArray(flattened)) {
+                return flattened.map(convertRequestBody);
+            }
+            if (isBlob(flattened) || isFormData(flattened)) {
+                return flattened;
+            }
+            if (typeof flattened === 'object' && flattened !== null) {
+                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
+            }
+            return flattened;
+        })()
+        : body;
+
 export const getRequestBody = (options: ApiRequestOptions): any => {
     if (options.body !== undefined) {
+        const body = convertRequestBody(options.body);
         if (options.mediaType?.includes('/json')) {
-            return JSON.stringify(options.body)
-        } else if (isString(options.body) || isBlob(options.body) || isFormData(options.body)) {
-            return options.body;
+            return JSON.stringify(body)
+        } else if (isString(body) || isBlob(body) || isFormData(body)) {
+            return body;
         } else {
-            return JSON.stringify(options.body);
+            return JSON.stringify(body);
         }
     }
     return undefined;
@@ -3467,101 +3215,41 @@ export const getResponseBody = async (response: Response): Promise<any> => {
     return undefined;
 };
 
-export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): void => {
-    const errors: Record<number, string> = {
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        500: 'Internal Server Error',
-        502: 'Bad Gateway',
-        503: 'Service Unavailable',
-        ...options.errors,
-    }
-
-    const error = errors[result.status];
-    if (error) {
-        throw new ApiError(options, result, error);
-    }
-
-    if (!result.ok) {
-        const errorStatus = result.status ?? 'unknown';
-        const errorStatusText = result.statusText ?? 'unknown';
-        const errorBody = (() => {
-            try {
-                return JSON.stringify(result.body, null, 2);
-            } catch (e) {
-                return undefined;
-            }
-        })();
-
-        throw new ApiError(options, result,
-            \`Generic Error: status: \${errorStatus}; status text: \${errorStatusText}; body: \${errorBody}\`
-        );
-    }
-};
-const flattenOption = (body: unknown): any =>
-    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
-    && (body._tag === 'None' || body._tag === 'Some')
-    ? body._tag === 'Some' && 'value' in body
-    ? body.value : undefined
-    : body;
-
-const convertRequestBody = (body: unknown): any =>
-    typeof body === 'object' && body !== null
-        ? (() => {
-            const flattened = flattenOption(body);
-            if (flattened === undefined) {
-                return undefined;
-            }
-            if (Array.isArray(flattened)) {
-                return flattened.map(value => convertRequestBody(value));
-            }
-            if (isBlob(flattened) || isFormData(flattened)) {
-                return flattened;
-            }
-            if (typeof flattened === 'object' && flattened !== null) {
-                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
-            }
-            return flattened;
-        })()
-        : body;
-
+const decodeResponse = <T extends Record<number,D.Decoder<unknown>>>(result: ApiResult, options: ApiRequestOptions<T>): ApiResponse<T> => {
+    const decoder = options.decoders[result.status] ?? options.decoders[0] ?? D.unknown;
+    const body = decoder.decode(result.data);
+    return {
+        status: result.status,
+        body: body,
+    };
+}
 /**
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
  */
-export const request = <T extends Record<number,D.Decoder<any>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): CancelablePromise<Either<D.DecoderError | ApiError, ApiResponse<T>>> => {
-    return new CancelablePromise(async (resolve, reject, onCancel) => {
+export const request = <T extends Record<number,D.Decoder<unknown>>>(config: OpenAPIConfig, options: ApiRequestOptions<T>): TaskEither<HTTPError, ApiResponse<T>> => {
+    return async () => {
         try {
-            options = convertRequestBody(options);
             const url = getUrl(config, options);
             const formData = getFormData(options);
             const body = getRequestBody(options);
             const headers = await getHeaders(config, options);
-
-            if (!onCancel.isCancelled) {
-                const response = await sendRequest(config, options, url, body, formData, headers, onCancel);
-                const responseBody = await getResponseBody(response);
-                const responseHeader = getResponseHeader(response, options.responseHeader);
-
-                const result: ApiResult = {
-                    url,
-                    ok: response.ok,
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: responseHeader ?? responseBody,
-                };
-
-                catchErrorCodes(options, result);
-
-                resolve(options.responseDecoders[response.status].decode(result.body));
-            }
+            const response = await sendRequest(options, url, body, formData, headers, onCancel);
+            const responseBody = await getResponseBody(response);
+            const responseHeader = getResponseHeader(response, options.responseHeader);
+            const result: ApiResult = {
+                url,
+                ok: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+                body: responseHeader ?? responseBody,
+            };
+            return right(decodeResponse(result, options));
         } catch (error) {
-            resolve(either.left(error as ApiError));
+            return left(new HTTPError(error));
         }
-    });
+    };
 };
 "
 `;
@@ -4230,9 +3918,7 @@ exports[`v3 should generate: test/generated/v3/models/FreeFormObjectWithAddition
 /* tslint:disable */
 /* eslint-disable */
 import * as D from '@majkit/fp-ts-schema';
-export const FreeFormObjectWithAdditionalPropertiesEqEmptyObject = D.record(D.createDecoder<unknown>({
-    forceDecode: (data) => data,
-}));
+export const FreeFormObjectWithAdditionalPropertiesEqEmptyObject = D.record(D.unknown);
 export type FreeFormObjectWithAdditionalPropertiesEqEmptyObjectType = D.Output<typeof FreeFormObjectWithAdditionalPropertiesEqEmptyObject>;
 "
 `;
@@ -4243,9 +3929,7 @@ exports[`v3 should generate: test/generated/v3/models/FreeFormObjectWithAddition
 /* tslint:disable */
 /* eslint-disable */
 import * as D from '@majkit/fp-ts-schema';
-export const FreeFormObjectWithAdditionalPropertiesEqTrue = D.record(D.createDecoder<unknown>({
-    forceDecode: (data) => data,
-}));
+export const FreeFormObjectWithAdditionalPropertiesEqTrue = D.record(D.unknown);
 export type FreeFormObjectWithAdditionalPropertiesEqTrueType = D.Output<typeof FreeFormObjectWithAdditionalPropertiesEqTrue>;
 "
 `;
@@ -4256,9 +3940,7 @@ exports[`v3 should generate: test/generated/v3/models/FreeFormObjectWithoutAddit
 /* tslint:disable */
 /* eslint-disable */
 import * as D from '@majkit/fp-ts-schema';
-export const FreeFormObjectWithoutAdditionalProperties = D.record(D.createDecoder<unknown>({
-    forceDecode: (data) => data,
-}));
+export const FreeFormObjectWithoutAdditionalProperties = D.record(D.unknown);
 export type FreeFormObjectWithoutAdditionalPropertiesType = D.Output<typeof FreeFormObjectWithoutAdditionalProperties>;
 "
 `;
@@ -6170,12 +5852,10 @@ export class ComplexService {
                 'parameterObject': parameterObject,
                 'parameterReference': parameterReference,
             },
-            responseDecoders: {
+            decoders: {
                 200: D.array(ModelWithString),
-            },
-            errors: {
-                400: \`400 server error\`,
-                500: \`500 server error\`,
+                400: D.unknown,
+                500: D.unknown,
             },
         });
     }
@@ -6207,7 +5887,7 @@ export class ComplexService {
             },
             body: requestBody,
             mediaType: 'application/json-patch+json',
-            responseDecoders: {
+            decoders: {
                 200: ModelWithString,
             },
         });
@@ -6382,24 +6062,12 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class DescriptionsService {
     private static callWithDescriptionsDecoder = D.object({
-        parameterWithBreaks: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
-        parameterWithBackticks: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
-        parameterWithSlashes: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
-        parameterWithExpressionPlaceholders: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
-        parameterWithQuotes: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
-        parameterWithReservedCharacters: D.optional(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        })),
+        parameterWithBreaks: D.optional(D.unknown),
+        parameterWithBackticks: D.optional(D.unknown),
+        parameterWithSlashes: D.optional(D.unknown),
+        parameterWithExpressionPlaceholders: D.optional(D.unknown),
+        parameterWithQuotes: D.optional(D.unknown),
+        parameterWithReservedCharacters: D.optional(D.unknown),
     });
     public static callWithDescriptions(
         parameterWithBreaks: D.Output<typeof this.callWithDescriptionsDecoder>['parameterWithBreaks'] = option.none,
@@ -6486,16 +6154,12 @@ export class ErrorService {
             query: {
                 'status': status,
             },
-            responseDecoders: {
-                200: D.createDecoder<unknown>({
-                    forceDecode: (data) => data,
-                }),
-            },
-            errors: {
-                500: \`Custom message: Internal Server Error\`,
-                501: \`Custom message: Not Implemented\`,
-                502: \`Custom message: Bad Gateway\`,
-                503: \`Custom message: Service Unavailable\`,
+            decoders: {
+                200: D.unknown,
+                500: D.unknown,
+                501: D.unknown,
+                502: D.unknown,
+                503: D.unknown,
             },
         });
     }
@@ -6551,12 +6215,10 @@ export class HeaderService {
             method: 'POST',
             url: '/api/v{api-version}/header',
             responseHeader: 'operation-location',
-            responseDecoders: {
+            decoders: {
                 200: D.string,
-            },
-            errors: {
-                400: \`400 server error\`,
-                500: \`500 server error\`,
+                400: D.unknown,
+                500: D.unknown,
             },
         });
     }
@@ -6602,7 +6264,7 @@ export class MultipartService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multipart',
-            responseDecoders: {
+            decoders: {
                 200: D.object({
                     file: D.optional(D.createDecoder<Blob>({
                         forceDecode: (data) => {
@@ -6638,8 +6300,8 @@ export class MultipleTags1Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/a',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6647,8 +6309,8 @@ export class MultipleTags1Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6670,8 +6332,8 @@ export class MultipleTags2Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/a',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6679,8 +6341,8 @@ export class MultipleTags2Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6702,8 +6364,8 @@ export class MultipleTags3Service {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/multiple-tags/b',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6725,8 +6387,8 @@ export class NoContentService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/no-content',
-            responseDecoders: {
-                200: D.succeed<void>(undefined),
+            decoders: {
+                204: D.succeed<void>(undefined),
             },
         });
     }
@@ -6921,7 +6583,7 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
             },
         });
@@ -6930,13 +6592,13 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
-            },
-            errors: {
-                500: \`Message for 500 error\`,
-                501: \`Message for 501 error\`,
-                502: \`Message for 502 error\`,
+                201: ModelWithString,
+                202: ModelWithString,
+                500: ModelWithString,
+                501: ModelWithString,
+                502: ModelWithString,
             },
         });
     }
@@ -6944,7 +6606,7 @@ export class ResponseService {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v{api-version}/response',
-            responseDecoders: {
+            decoders: {
                 0: ModelWithString,
                 200: D.object({
                     '@namespace.string': D.optional(D.string),
@@ -6953,11 +6615,9 @@ export class ResponseService {
                 }),
                 201: ModelThatExtends,
                 202: ModelThatExtendsExtends,
-            },
-            errors: {
-                500: \`Message for 500 error\`,
-                501: \`Message for 501 error\`,
-                502: \`Message for 502 error\`,
+                500: ModelWithString,
+                501: ModelWithString,
+                502: ModelWithString,
             },
         });
     }
@@ -7033,16 +6693,12 @@ import { request as __request } from '../core/request';
 export class TypesService {
     private static typesDecoder = D.object({
         parameterArray: D.nullable(D.array(D.string)),
-        parameterDictionary: D.nullable(D.record(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        }))),
+        parameterDictionary: D.nullable(D.record(D.unknown)),
         parameterEnum: D.nullable(D.literalUnion('Success', 'Warning', 'Error')),
         parameterNumber: D.number,
         parameterString: D.nullable(D.string),
         parameterBoolean: D.nullable(D.boolean),
-        parameterObject: D.nullable(D.record(D.createDecoder<unknown>({
-            forceDecode: (data) => data,
-        }))),
+        parameterObject: D.nullable(D.record(D.unknown)),
         id: D.optional(D.number),
     });
     public static types(
@@ -7070,13 +6726,11 @@ export class TypesService {
                 'parameterDictionary': parameterDictionary,
                 'parameterEnum': parameterEnum,
             },
-            responseDecoders: {
+            decoders: {
                 200: D.number,
                 201: D.string,
                 202: D.boolean,
-                203: D.record(D.createDecoder<unknown>({
-                    forceDecode: (data) => data,
-                })),
+                203: D.record(D.unknown),
             },
         });
     }
@@ -7113,7 +6767,7 @@ export class UploadService {
             formData: {
                 'file': file,
             },
-            responseDecoders: {
+            decoders: {
                 200: D.boolean,
             },
         });

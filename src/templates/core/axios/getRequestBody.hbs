@@ -1,6 +1,9 @@
+{{>functions/convertRequestBody}}
+
+
 export const getRequestBody = (options: ApiRequestOptions): any => {
 	if (options.body) {
-		return options.body;
+		return convertRequestBody(options.body);
 	}
 	return undefined;
 };

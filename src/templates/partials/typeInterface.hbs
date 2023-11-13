@@ -13,7 +13,5 @@ D.object({
 })
 {{~/isNullable}}
 {{~else~}}
-D.createDecoder<unknown>({
-	forceDecode: (data) => data,
-})
+D.unknown
 {{~/if~}}

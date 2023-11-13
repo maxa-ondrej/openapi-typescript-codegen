@@ -22,3 +22,14 @@ export class ApiError<T extends Record<number,D.Decoder<any>>> extends Error {
 		this.request = request;
 	}
 }
+
+export class HTTPError extends Error {
+	cause: unknown;
+
+	constructor(originalError: unknown) {
+		super(`${originalError}`);
+
+		this.cause = originalError;
+		this.name = 'HTTPError';
+	}
+}

@@ -1,0 +1,26 @@
+const flattenOption = (body: unknown): any =>
+    typeof body === 'object' && body !== null && '_tag' in body && typeof body._tag === 'string'
+    && (body._tag === 'None' || body._tag === 'Some')
+    ? body._tag === 'Some' && 'value' in body
+    ? body.value : undefined
+    : body;
+
+const convertRequestBody = (body: unknown): any =>
+    typeof body === 'object' && body !== null
+        ? (() => {
+            const flattened = flattenOption(body);
+            if (flattened === undefined) {
+                return undefined;
+            }
+            if (Array.isArray(flattened)) {
+                return flattened.map(convertRequestBody);
+            }
+            if (isBlob(flattened) || isFormData(flattened)) {
+                return flattened;
+            }
+            if (typeof flattened === 'object' && flattened !== null) {
+                return Object.fromEntries(Object.entries(flattened).map(([key, value]) => [key, convertRequestBody(value)]));
+            }
+            return flattened;
+        })()
+        : body;

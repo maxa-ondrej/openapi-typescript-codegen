@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@majkit/fp-ts-schema':
-    specifier: ^1.1.1
-    version: 1.1.1
+    specifier: ^1.1.4
+    version: 1.1.4(fp-ts@2.16.1)
   camelcase:
     specifier: ^6.3.0
     version: 6.3.0
@@ -3498,11 +3498,12 @@ packages:
     resolution: {integrity: sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==}
     dev: true
 
-  /@majkit/fp-ts-schema@1.1.1:
-    resolution: {integrity: sha512-ldFsUOuBgCjRs872T0/PdLAKA9ZX3M3yuD2nCDIcFDe2HBxG0a4E+O+uiGWLudJkkQdwKXNKdBwzBSGAP5ys9w==}
+  /@majkit/fp-ts-schema@1.1.4(fp-ts@2.16.1):
+    resolution: {integrity: sha512-rpJFlzJY4epzjD+hns4OhNeK+lu7vlMRVhUBahr+NQcrSHCQkUOf+GNAt3nq8Vsu4Mf1j9N1iw6onVsoQqHzBA==}
+    peerDependencies:
+      fp-ts: ^2.16.1
     dependencies:
       fp-ts: 2.16.1
-      schemawax: 1.0.12
     dev: false
 
   /@ngtools/webpack@16.2.10(@angular/compiler-cli@16.1.3)(typescript@5.1.6)(webpack@5.88.2):
@@ -9558,10 +9559,6 @@ packages:
       ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
     dev: true
-
-  /schemawax@1.0.12:
-    resolution: {integrity: sha512-1N6jkJHStJs24CRSb5UGgye83wxQAx3bOeJ8zaJ+QXBcUyd+xxSgZ6H9GlpYxqlddeXgOmamxS+afYZGNKWsCw==}
-    dev: false
 
   /select-hose@2.0.0:
     resolution: {integrity: sha512-mEugaLK+YfkijB4fx0e6kImuJdCIt2LxCRcbEYPqRGCs4F2ogyfZU5IAZRdjCP8JPq2AtdNoC/Dux63d9Kiryg==}
