@@ -8,6 +8,10 @@ import type { ApiResponse } from './ApiResponse';
 import type { OpenAPIConfig } from './OpenAPI';
 import { right, left } from 'fp-ts/lib/Either';
 import type { TaskEither } from 'fp-ts/lib/TaskEither';
+import { either, taskEither } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+import type { Task } from 'fp-ts/lib/Task';
+import { pipe } from 'fp-ts/lib/function';
 
 {{>functions/isDefined}}
 
