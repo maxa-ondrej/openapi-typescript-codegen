@@ -5,6 +5,8 @@ export { {{{clientName}}} } from './{{{clientName}}}';
 
 {{/if}}
 {{#if @root.exportCore}}
+import { match, matchT } from './core/request';
+export const response = { match, matchT };
 export { HttpError } from './core/HttpError';
 {{#if @root.exportClient}}
 export { BaseHttpRequest } from './core/BaseHttpRequest';

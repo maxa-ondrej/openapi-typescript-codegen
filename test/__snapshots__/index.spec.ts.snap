@@ -477,6 +477,8 @@ exports[`v2 should generate: test/generated/v2/index.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import { match, matchT } from './core/request';
+export const response = { match, matchT };
 export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
@@ -3300,6 +3302,8 @@ exports[`v3 should generate: test/generated/v3/index.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import { match, matchT } from './core/request';
+export const response = { match, matchT };
 export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
