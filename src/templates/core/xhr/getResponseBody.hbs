@@ -4,7 +4,12 @@ export const getResponseBody = (xhr: XMLHttpRequest): unknown => {
 			const contentType = xhr.getResponseHeader('Content-Type');
 			if (contentType) {
 				const jsonTypes = ['application/json', 'application/problem+json']
+				const eventStreamTypes = ['text/event-stream'];
 				const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
+				const isEventStream = eventStreamTypes.some((type) => contentType.toLowerCase().startsWith(type));
+				if (isEventStream) {
+					return new ReadableStream(new TextEncoder().encode(xhr.responseText));
+				}
 				if (isJSON) {
 					return JSON.parse(xhr.responseText);
 				} else {

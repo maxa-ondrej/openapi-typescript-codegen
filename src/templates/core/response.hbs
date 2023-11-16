@@ -1,0 +1,50 @@
+{{>header}}
+
+import * as D from '@majkit/fp-ts-schema';
+import { either, taskEither } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+import type { Task } from 'fp-ts/lib/Task';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
+import { pipe } from 'fp-ts/lib/function';
+import type { ApiResponse } from './ApiResponse';
+import type { HttpError } from './HttpError';
+
+type ErrMatcher<B> = {
+	DecodeErr: (err: D.DecoderError) => B;
+};
+
+type ErrsMatcher<B> = ErrMatcher<B> & {
+	HttpErr: (err: HttpError) => B;
+};
+
+type Matchers<T extends ApiResponse<Record<number, D.Decoder<unknown>>>, B> = {
+	[E in T as E['status']]: E['body'] extends Either<unknown, infer X> ? ($: X) => B : never;
+};
+
+type DefMatcher<T extends ApiResponse<Record<number, D.Decoder<unknown>>>, B> = {
+	_: T['body'] extends Either<unknown, infer X> ? ($: X) => B : never;
+};
+
+export const match =
+	<
+		T extends ApiResponse<Record<number, D.Decoder<unknown>>>,
+		B,
+		M extends Partial<Matchers<T, B>> & DefMatcher<T, B> & ErrMatcher<B>,
+	>(
+		matchers: M,
+	) =>
+	(response: T): B =>
+		either.isLeft(response.body)
+		? matchers.DecodeErr(response.body.left)
+		: ((matchers[response.status as keyof typeof matchers] as ((d: unknown) => B) | undefined) ?? matchers._)(
+			response.body.right,
+			);
+
+type TEMatchers<T extends ApiResponse<Record<number, D.Decoder<unknown>>>, B> = Matchers<T, B> &
+	DefMatcher<T, B> &
+	ErrsMatcher<B>;
+
+export const matchT =
+	<T extends ApiResponse<Record<number, D.Decoder<unknown>>>, M extends TEMatchers<T, unknown>>(matchers: M) =>
+	(te: TaskEither<HttpError, T>) =>
+		pipe(te, taskEither.match(matchers.HttpErr, match(matchers))) as Task<M extends TEMatchers<T, infer B> ? B : never>;

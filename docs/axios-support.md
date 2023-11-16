@@ -6,8 +6,8 @@ If you want to generate the Axios based client then you can specify `--client ax
 
 `openapi --input ./spec.json --output ./generated --client axios`
 
-The only downside is that this client needs some additional dependencies to work (due to the missing FormData
-classes in Node.js).
+The only downsides are that this client needs some additional dependencies to work (due to the missing FormData
+classes in Node.js) and it does not supports server side events.
 
 ```
 npm install axios --save-dev

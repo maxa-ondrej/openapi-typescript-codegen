@@ -4,7 +4,12 @@ export const getResponseBody = async (response: Response): Promise<unknown> => {
 			const contentType = response.headers.get('Content-Type');
 			if (contentType) {
 				const jsonTypes = ['application/json', 'application/problem+json']
+				const eventStreamTypes = ['text/event-stream'];
 				const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
+				const isEventStream = eventStreamTypes.some((type) => contentType.toLowerCase().startsWith(type));
+				if (isEventStream) {
+					return response.body ?? undefined;
+				}
 				if (isJSON) {
 					return await response.json();
 				} else {

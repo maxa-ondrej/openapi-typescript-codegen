@@ -33,6 +33,8 @@ describe('writeClientCore', () => {
         apiResponse: () => 'apiResponse',
         apiResult: () => 'apiResult',
         request: () => 'request',
+        response: () => 'response',
+        sse: () => 'sse',
         baseHttpRequest: () => 'baseHttpRequest',
         httpError: () => 'httpError',
         httpRequest: () => 'httpRequest',
@@ -59,6 +61,8 @@ describe('writeClientCore', () => {
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResponse.ts'), `apiResponse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/ApiResult.ts'), `apiResult${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/request.ts'), `request${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/response.ts'), `response${EOL}`);
+    expect(writeFile).toBeCalledWith(resolve('/', '/sse.ts'), `sse${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/HttpError.ts'), `httpError${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/BaseHttpRequest.ts'), `baseHttpRequest${EOL}`);
     expect(writeFile).toBeCalledWith(resolve('/', '/FetchHttpRequest.ts'), `httpRequest${EOL}`);

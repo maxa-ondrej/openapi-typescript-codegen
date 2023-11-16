@@ -41,6 +41,8 @@ import nodeGetResponseHeader from '../templates/core/node/getResponseHeader.hbs'
 import nodeRequest from '../templates/core/node/request.hbs';
 import nodeSendRequest from '../templates/core/node/sendRequest.hbs';
 import templateCoreRequest from '../templates/core/request.hbs';
+import templateCoreResponse from '../templates/core/response.hbs';
+import templateCoreSSE from '../templates/core/sse.hbs';
 import xhrGetHeaders from '../templates/core/xhr/getHeaders.hbs';
 import xhrGetRequestBody from '../templates/core/xhr/getRequestBody.hbs';
 import xhrGetResponseBody from '../templates/core/xhr/getResponseBody.hbs';
@@ -90,6 +92,8 @@ export interface Templates {
     apiResponse: Handlebars.TemplateDelegate;
     apiResult: Handlebars.TemplateDelegate;
     request: Handlebars.TemplateDelegate;
+    response: Handlebars.TemplateDelegate;
+    sse: Handlebars.TemplateDelegate;
     baseHttpRequest: Handlebars.TemplateDelegate;
     httpError: Handlebars.TemplateDelegate;
     httpRequest: Handlebars.TemplateDelegate;
@@ -121,6 +125,8 @@ export const registerHandlebarTemplates = (root: {
       apiResponse: Handlebars.template(templateCoreApiResponse),
       apiResult: Handlebars.template(templateCoreApiResult),
       request: Handlebars.template(templateCoreRequest),
+      response: Handlebars.template(templateCoreResponse),
+      sse: Handlebars.template(templateCoreSSE),
       baseHttpRequest: Handlebars.template(templateCoreBaseHttpRequest),
       httpError: Handlebars.template(templateCoreHttpError),
       httpRequest: Handlebars.template(templateCoreHttpRequest),

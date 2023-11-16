@@ -8,7 +8,7 @@ export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
 ): Promise<Response> => {
 	const request: RequestInit = {
 		headers,
-		body: body ?? formData,
+		body: body ?? formData ?? null,
 		method: options.method,
 	};
 

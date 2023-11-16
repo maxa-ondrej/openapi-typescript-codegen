@@ -1,4 +1,13 @@
 {{#>isNullable~}}
+{{~#equals format 'event-stream'~}}
+SSE.decoder(
+	{{~#if link~}}
+		{{~>type link~}}
+	{{~else~}}
+		{{~>base~}}
+	{{~/if~}}
+)
+{{~else~}}
 D.array(
 	{{~#if link~}}
 		{{~>type link~}}
@@ -6,4 +15,5 @@ D.array(
 		{{~>base~}}
 	{{~/if~}}
 )
+{{~/equals~}}
 {{~/isNullable}}

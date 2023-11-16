@@ -43,6 +43,8 @@ export const writeClientCore = async (
   await writeFile(resolve(outputPath, 'ApiResponse.ts'), i(templates.core.apiResponse(context), indent));
   await writeFile(resolve(outputPath, 'ApiResult.ts'), i(templates.core.apiResult(context), indent));
   await writeFile(resolve(outputPath, 'request.ts'), i(templates.core.request(context), indent));
+  await writeFile(resolve(outputPath, 'response.ts'), i(templates.core.response(context), indent));
+  await writeFile(resolve(outputPath, 'sse.ts'), i(templates.core.sse(context), indent));
 
   if (isDefined(clientName)) {
     await writeFile(resolve(outputPath, 'BaseHttpRequest.ts'), i(templates.core.baseHttpRequest(context), indent));

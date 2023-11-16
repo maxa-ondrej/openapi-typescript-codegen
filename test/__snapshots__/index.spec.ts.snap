@@ -352,7 +352,7 @@ export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
 ): Promise<Response> => {
     const request: RequestInit = {
         headers,
-        body: body ?? formData,
+        body: body ?? formData ?? null,
         method: options.method,
     };
 
@@ -379,7 +379,12 @@ export const getResponseBody = async (response: Response): Promise<unknown> => {
             const contentType = response.headers.get('Content-Type');
             if (contentType) {
                 const jsonTypes = ['application/json', 'application/problem+json']
+                const eventStreamTypes = ['text/event-stream'];
                 const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
+                const isEventStream = eventStreamTypes.some((type) => contentType.toLowerCase().startsWith(type));
+                if (isEventStream) {
+                    return response.body ?? undefined;
+                }
                 if (isJSON) {
                     return await response.json();
                 } else {
@@ -429,6 +434,22 @@ export const request = <T extends Record<number,D.Decoder<unknown>>>(config: Ope
         }
     };
 };
+"
+`;
+
+exports[`v2 should generate: test/generated/v2/core/response.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import * as D from '@majkit/fp-ts-schema';
+import { either, taskEither } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+import type { Task } from 'fp-ts/lib/Task';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
+import { pipe } from 'fp-ts/lib/function';
+import type { ApiResponse } from './ApiResponse';
+import type { HttpError } from './HttpError';
 
 type ErrMatcher<B> = {
     DecodeErr: (err: D.DecoderError) => B;
@@ -472,13 +493,325 @@ export const matchT =
 "
 `;
 
+exports[`v2 should generate: test/generated/v2/core/sse.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import * as D from '@majkit/fp-ts-schema';
+import type { Decoder, DecoderError } from '@majkit/fp-ts-schema';
+import { json } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+
+/**
+ * Represents a message sent in an event stream
+ * https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format
+ */
+type EventSourceMessage = {
+    /** The event ID to set the EventSource object's last event ID value. */
+    id: string;
+    /** A string identifying the type of event described. */
+    event: string;
+    /** The event data */
+    data: string;
+    /** The reconnection interval (in milliseconds) to wait before retrying the connection */
+    retry?: number | undefined;
+};
+
+/**
+ * Converts a ReadableStream into a callback pattern.
+ * @param stream The input ReadableStream.
+ * @param onChunk A function that will be called on each new byte chunk in the stream.
+ * @returns A promise that will be resolved when the stream closes.
+ */
+const getBytes = async (stream: ReadableStream<Uint8Array>, onChunk: (arr: Uint8Array) => void): Promise<void> => {
+    const reader = stream.getReader();
+    let result = await reader.read();
+    while (!result.done) {
+        onChunk(result.value);
+        result = await reader.read();
+    }
+};
+
+enum ControlChars {
+    NewLine = 10,
+    CarriageReturn = 13,
+    Space = 32,
+    Colon = 58,
+}
+
+const concat = (a: Uint8Array, b: Uint8Array) => {
+    const res = new Uint8Array(a.length + b.length);
+    res.set(a);
+    res.set(b, a.length);
+    return res;
+};
+
+const newMessage = (): EventSourceMessage => ({
+    data: '',
+    event: '',
+    id: '',
+    retry: undefined,
+});
+
+/**
+ * Parses arbitary byte chunks into EventSource line buffers.
+ * Each line should be of the format "field: value" and ends with \\r, \\n, or \\r\\n.
+ * @param onLine A function that will be called on each new EventSource line.
+ * @returns A function that should be called for each incoming byte chunk.
+ */
+const getLines = (onLine: (line: Uint8Array, fieldLength: number) => void) => {
+    let buffer: Uint8Array | undefined;
+    let position: number; // current read position
+    let fieldLength: number; // length of the \`field\` portion of the line
+    let discardTrailingNewline = false;
+
+    // return a function that can process each incoming byte chunk:
+    return function onChunk(arr: Uint8Array) {
+        if (buffer === undefined) {
+            buffer = arr;
+            position = 0;
+            fieldLength = -1;
+        } else {
+            // we're still parsing the old line. Append the new bytes into buffer:
+            buffer = concat(buffer, arr);
+        }
+
+        const bufLength = buffer.length;
+        let lineStart = 0; // index where the current line starts
+        while (position < bufLength) {
+            if (discardTrailingNewline) {
+                if (buffer[position] === ControlChars.NewLine) {
+                    lineStart = ++position; // skip to next char
+                }
+
+                discardTrailingNewline = false;
+            }
+
+            // start looking forward till the end of line:
+            let lineEnd = -1; // index of the \\r or \\n char
+            for (; position < bufLength && lineEnd === -1; ++position) {
+                switch (buffer[position]) {
+                    case ControlChars.Colon:
+                        if (fieldLength === -1) {
+                            // first colon in line
+                            fieldLength = position - lineStart;
+                        }
+                        break;
+                    // @ts-ignore:7029 \\r case below should fallthrough to \\n:
+                    case ControlChars.CarriageReturn:
+                        discardTrailingNewline = true;
+                    case ControlChars.NewLine:
+                        lineEnd = position;
+                        break;
+                }
+            }
+
+            if (lineEnd === -1) {
+                // We reached the end of the buffer but the line hasn't ended.
+                // Wait for the next arr and then continue parsing:
+                break;
+            }
+
+            // we've reached the line end, send it out:
+            onLine(buffer.subarray(lineStart, lineEnd), fieldLength);
+            lineStart = position; // we're now on the next line
+            fieldLength = -1;
+        }
+
+        if (lineStart === bufLength) {
+            buffer = undefined; // we've finished reading it
+        } else if (lineStart !== 0) {
+            // Create a new view into buffer beginning at lineStart so we don't
+            // need to copy over the previous lines when we get the new arr:
+            buffer = buffer.subarray(lineStart);
+            position -= lineStart;
+        }
+    };
+};
+
+/**
+ * Parses line buffers into EventSourceMessages.
+ * @param onId A function that will be called on each \`id\` field.
+ * @param onRetry A function that will be called on each \`retry\` field.
+ * @param onMessage A function that will be called on each message.
+ * @returns A function that should be called for each incoming line buffer.
+ */
+export const getMessages = (onMessage?: (msg: EventSourceMessage) => void) => {
+    let message = newMessage();
+    const decoder = new TextDecoder();
+
+    // return a function that can process each incoming line buffer:
+    return function onLine(line: Uint8Array, fieldLength: number) {
+        if (line.length === 0) {
+            // empty line denotes end of message. Trigger the callback and start a new message:
+            onMessage?.(message);
+            message = newMessage();
+        } else if (fieldLength > 0) {
+            // exclude comments and lines with no values
+            // line is of format "<field>:<value>" or "<field>: <value>"
+            // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
+            const field = decoder.decode(line.subarray(0, fieldLength));
+            const valueOffset = fieldLength + (line[fieldLength + 1] === ControlChars.Space ? 2 : 1);
+            const value = decoder.decode(line.subarray(valueOffset));
+
+            switch (field) {
+                case 'data':
+                    // if this message already has data, append the new value to the old.
+                    // otherwise, just set to the new value:
+                    message.data = message.data ? \`\${message.data}\\n\${value}\` : value; // otherwise,
+                    break;
+                case 'event':
+                    message.event = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+};
+
+export type Subscriber<T> = (value: T) => void;
+
+export type Unsubscriber = () => void;
+
+export type Invalidator<T> = (value?: T) => void;
+
+type SubscribeInvalidateTuple<T> = [Subscriber<T>, Invalidator<T>];
+
+export type EventsPromise<S> = {
+    subscribe: (run: Subscriber<S>) => Unsubscriber;
+    listen: (listener: (value: S) => void) => Unsubscriber;
+} & PromiseLike<S>;
+
+type Queued<T> = [SubscribeInvalidateTuple<T>, T];
+
+const writable = <T>(initial: T) => {
+    const subscriber_queue: Queued<T>[] = [];
+    let value = initial;
+    let stop: Unsubscriber | null = null;
+    const subscribers = new Set<SubscribeInvalidateTuple<T>>();
+    const set = (new_value: T): void => {
+        value = new_value;
+        if (stop) {
+            // store is ready
+            const run_queue = !subscriber_queue.length;
+            for (const subscriber of subscribers) {
+                subscriber[1]();
+                subscriber_queue.push([subscriber, value]);
+            }
+            if (run_queue) {
+                for (const sub of subscriber_queue) {
+                    sub[0][0](sub[1]);
+                }
+                subscriber_queue.length = 0;
+            }
+        }
+    };
+
+    const subscribe = (run: Subscriber<T>, invalidate: Invalidator<T> = () => {}): Unsubscriber => {
+        const subscriber: SubscribeInvalidateTuple<T> = [run, invalidate];
+        subscribers.add(subscriber);
+        if (subscribers.size === 1) {
+            stop = () => {};
+        }
+        run(value);
+        return () => {
+            subscribers.delete(subscriber);
+            if (subscribers.size === 0 && stop) {
+                stop();
+                stop = null;
+            }
+        };
+    };
+    return { set, subscribe };
+};
+
+export const EventsPromise = <S, D>(
+    initial: S,
+    onChange: ($: { state: S; data: Either<DecoderError, D> }) => S,
+    source: ReadableStream<Uint8Array>,
+    parse: (data: string) => Either<DecoderError, D>,
+) => {
+    let currentState = initial;
+    const state = writable(initial);
+    let resolve: (value: S) => void;
+    const promise = new Promise<S>((_resolve) => {
+        resolve = _resolve;
+    });
+    getBytes(
+        source,
+        getLines(
+            getMessages(($) => {
+                const data = parse($.data);
+                currentState = onChange({ state: currentState, data });
+                state.set(currentState);
+            }),
+        ),
+    ).then(() => resolve(currentState));
+    const returned: EventsPromise<S> = {
+        then: promise.then.bind(promise),
+        subscribe: (run) => state.subscribe(run),
+        listen: (listener): Unsubscriber => state.subscribe(listener),
+    };
+    return returned;
+};
+
+export const listen =
+    <S>(listener: (value: S) => void) =>
+    (promise: EventsPromise<S>) => {
+        promise.listen(listener);
+        return promise;
+    };
+
+export type OnChange<S, D> = ($: { state: S; data: Either<DecoderError, D> }) => S;
+export type SSEStateChange<S, D> = {
+    onChange: OnChange<S, D>;
+    initialState: S;
+};
+export type SSEStateChangeUnion<S, D extends Record<number, unknown>> = SSEStateChange<S, D[keyof D]>;
+export type SSEStateChangeObject<S, D extends Record<number, unknown>> = {
+    [K in keyof D]: SSEStateChange<S, D[K]>;
+};
+export type StateChange<S, D extends Record<number, unknown>> = SSEStateChangeUnion<S, D> | SSEStateChangeObject<S, D>;
+
+const decode =
+    <D>(decoder: Decoder<D>) =>
+    (source: ReadableStream<Uint8Array>) =>
+    <S>(onChange: ($: { state: S; data: Either<DecoderError, D> }) => S) =>
+    (initialState: S) =>
+        EventsPromise(initialState, onChange, source, ($) => {
+            const rawDecode = decoder.decode($);
+            if (rawDecode._tag === 'Right') {
+                return rawDecode;
+            }
+            const jsonObj = json.parse($);
+            if (jsonObj._tag === 'Right') {
+                return decoder.decode(jsonObj.right);
+            }
+            return rawDecode;
+        });
+
+export const decoder = <D>(entity: Decoder<D>) =>
+    D.createDecoder({
+        forceDecode: (input) => {
+            if (input instanceof ReadableStream) {
+                return decode(entity)(input);
+            }
+            throw new Error('Expected ReadableStream');
+        },
+    });
+"
+`;
+
 exports[`v2 should generate: test/generated/v2/index.ts 1`] = `
 "/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import { match, matchT } from './core/request';
-export const response = { match, matchT };
+export * as response from './core/response';
+export * as sse from './core/sse';
+
 export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
@@ -2110,6 +2443,7 @@ exports[`v2 should generate: test/generated/v2/services/CollectionFormatService.
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2150,6 +2484,7 @@ exports[`v2 should generate: test/generated/v2/services/ComplexService.ts 1`] = 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -2193,6 +2528,7 @@ exports[`v2 should generate: test/generated/v2/services/DefaultService.ts 1`] = 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2213,6 +2549,7 @@ exports[`v2 should generate: test/generated/v2/services/DefaultsService.ts 1`] =
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -2319,6 +2656,7 @@ exports[`v2 should generate: test/generated/v2/services/DescriptionsService.ts 1
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2362,6 +2700,7 @@ exports[`v2 should generate: test/generated/v2/services/DuplicateService.ts 1`] 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2400,6 +2739,7 @@ exports[`v2 should generate: test/generated/v2/services/ErrorService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2435,6 +2775,7 @@ exports[`v2 should generate: test/generated/v2/services/HeaderService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2461,6 +2802,7 @@ exports[`v2 should generate: test/generated/v2/services/MultipleTags1Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2493,6 +2835,7 @@ exports[`v2 should generate: test/generated/v2/services/MultipleTags2Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2525,6 +2868,7 @@ exports[`v2 should generate: test/generated/v2/services/MultipleTags3Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2548,6 +2892,7 @@ exports[`v2 should generate: test/generated/v2/services/NoContentService.ts 1`] 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2571,6 +2916,7 @@ exports[`v2 should generate: test/generated/v2/services/ParametersService.ts 1`]
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2658,6 +3004,7 @@ exports[`v2 should generate: test/generated/v2/services/ResponseService.ts 1`] =
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelThatExtends } from '../models/ModelThatExtends';
@@ -2717,6 +3064,7 @@ exports[`v2 should generate: test/generated/v2/services/SimpleService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -2773,6 +3121,7 @@ exports[`v2 should generate: test/generated/v2/services/TypesService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -3177,7 +3526,7 @@ export const sendRequest = async <T extends Record<number,D.Decoder<unknown>>>(
 ): Promise<Response> => {
     const request: RequestInit = {
         headers,
-        body: body ?? formData,
+        body: body ?? formData ?? null,
         method: options.method,
     };
 
@@ -3204,7 +3553,12 @@ export const getResponseBody = async (response: Response): Promise<unknown> => {
             const contentType = response.headers.get('Content-Type');
             if (contentType) {
                 const jsonTypes = ['application/json', 'application/problem+json']
+                const eventStreamTypes = ['text/event-stream'];
                 const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
+                const isEventStream = eventStreamTypes.some((type) => contentType.toLowerCase().startsWith(type));
+                if (isEventStream) {
+                    return response.body ?? undefined;
+                }
                 if (isJSON) {
                     return await response.json();
                 } else {
@@ -3254,6 +3608,22 @@ export const request = <T extends Record<number,D.Decoder<unknown>>>(config: Ope
         }
     };
 };
+"
+`;
+
+exports[`v3 should generate: test/generated/v3/core/response.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import * as D from '@majkit/fp-ts-schema';
+import { either, taskEither } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+import type { Task } from 'fp-ts/lib/Task';
+import type { TaskEither } from 'fp-ts/lib/TaskEither';
+import { pipe } from 'fp-ts/lib/function';
+import type { ApiResponse } from './ApiResponse';
+import type { HttpError } from './HttpError';
 
 type ErrMatcher<B> = {
     DecodeErr: (err: D.DecoderError) => B;
@@ -3297,13 +3667,325 @@ export const matchT =
 "
 `;
 
+exports[`v3 should generate: test/generated/v3/core/sse.ts 1`] = `
+"/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import * as D from '@majkit/fp-ts-schema';
+import type { Decoder, DecoderError } from '@majkit/fp-ts-schema';
+import { json } from 'fp-ts';
+import type { Either } from 'fp-ts/lib/Either';
+
+/**
+ * Represents a message sent in an event stream
+ * https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format
+ */
+type EventSourceMessage = {
+    /** The event ID to set the EventSource object's last event ID value. */
+    id: string;
+    /** A string identifying the type of event described. */
+    event: string;
+    /** The event data */
+    data: string;
+    /** The reconnection interval (in milliseconds) to wait before retrying the connection */
+    retry?: number | undefined;
+};
+
+/**
+ * Converts a ReadableStream into a callback pattern.
+ * @param stream The input ReadableStream.
+ * @param onChunk A function that will be called on each new byte chunk in the stream.
+ * @returns A promise that will be resolved when the stream closes.
+ */
+const getBytes = async (stream: ReadableStream<Uint8Array>, onChunk: (arr: Uint8Array) => void): Promise<void> => {
+    const reader = stream.getReader();
+    let result = await reader.read();
+    while (!result.done) {
+        onChunk(result.value);
+        result = await reader.read();
+    }
+};
+
+enum ControlChars {
+    NewLine = 10,
+    CarriageReturn = 13,
+    Space = 32,
+    Colon = 58,
+}
+
+const concat = (a: Uint8Array, b: Uint8Array) => {
+    const res = new Uint8Array(a.length + b.length);
+    res.set(a);
+    res.set(b, a.length);
+    return res;
+};
+
+const newMessage = (): EventSourceMessage => ({
+    data: '',
+    event: '',
+    id: '',
+    retry: undefined,
+});
+
+/**
+ * Parses arbitary byte chunks into EventSource line buffers.
+ * Each line should be of the format "field: value" and ends with \\r, \\n, or \\r\\n.
+ * @param onLine A function that will be called on each new EventSource line.
+ * @returns A function that should be called for each incoming byte chunk.
+ */
+const getLines = (onLine: (line: Uint8Array, fieldLength: number) => void) => {
+    let buffer: Uint8Array | undefined;
+    let position: number; // current read position
+    let fieldLength: number; // length of the \`field\` portion of the line
+    let discardTrailingNewline = false;
+
+    // return a function that can process each incoming byte chunk:
+    return function onChunk(arr: Uint8Array) {
+        if (buffer === undefined) {
+            buffer = arr;
+            position = 0;
+            fieldLength = -1;
+        } else {
+            // we're still parsing the old line. Append the new bytes into buffer:
+            buffer = concat(buffer, arr);
+        }
+
+        const bufLength = buffer.length;
+        let lineStart = 0; // index where the current line starts
+        while (position < bufLength) {
+            if (discardTrailingNewline) {
+                if (buffer[position] === ControlChars.NewLine) {
+                    lineStart = ++position; // skip to next char
+                }
+
+                discardTrailingNewline = false;
+            }
+
+            // start looking forward till the end of line:
+            let lineEnd = -1; // index of the \\r or \\n char
+            for (; position < bufLength && lineEnd === -1; ++position) {
+                switch (buffer[position]) {
+                    case ControlChars.Colon:
+                        if (fieldLength === -1) {
+                            // first colon in line
+                            fieldLength = position - lineStart;
+                        }
+                        break;
+                    // @ts-ignore:7029 \\r case below should fallthrough to \\n:
+                    case ControlChars.CarriageReturn:
+                        discardTrailingNewline = true;
+                    case ControlChars.NewLine:
+                        lineEnd = position;
+                        break;
+                }
+            }
+
+            if (lineEnd === -1) {
+                // We reached the end of the buffer but the line hasn't ended.
+                // Wait for the next arr and then continue parsing:
+                break;
+            }
+
+            // we've reached the line end, send it out:
+            onLine(buffer.subarray(lineStart, lineEnd), fieldLength);
+            lineStart = position; // we're now on the next line
+            fieldLength = -1;
+        }
+
+        if (lineStart === bufLength) {
+            buffer = undefined; // we've finished reading it
+        } else if (lineStart !== 0) {
+            // Create a new view into buffer beginning at lineStart so we don't
+            // need to copy over the previous lines when we get the new arr:
+            buffer = buffer.subarray(lineStart);
+            position -= lineStart;
+        }
+    };
+};
+
+/**
+ * Parses line buffers into EventSourceMessages.
+ * @param onId A function that will be called on each \`id\` field.
+ * @param onRetry A function that will be called on each \`retry\` field.
+ * @param onMessage A function that will be called on each message.
+ * @returns A function that should be called for each incoming line buffer.
+ */
+export const getMessages = (onMessage?: (msg: EventSourceMessage) => void) => {
+    let message = newMessage();
+    const decoder = new TextDecoder();
+
+    // return a function that can process each incoming line buffer:
+    return function onLine(line: Uint8Array, fieldLength: number) {
+        if (line.length === 0) {
+            // empty line denotes end of message. Trigger the callback and start a new message:
+            onMessage?.(message);
+            message = newMessage();
+        } else if (fieldLength > 0) {
+            // exclude comments and lines with no values
+            // line is of format "<field>:<value>" or "<field>: <value>"
+            // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
+            const field = decoder.decode(line.subarray(0, fieldLength));
+            const valueOffset = fieldLength + (line[fieldLength + 1] === ControlChars.Space ? 2 : 1);
+            const value = decoder.decode(line.subarray(valueOffset));
+
+            switch (field) {
+                case 'data':
+                    // if this message already has data, append the new value to the old.
+                    // otherwise, just set to the new value:
+                    message.data = message.data ? \`\${message.data}\\n\${value}\` : value; // otherwise,
+                    break;
+                case 'event':
+                    message.event = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+};
+
+export type Subscriber<T> = (value: T) => void;
+
+export type Unsubscriber = () => void;
+
+export type Invalidator<T> = (value?: T) => void;
+
+type SubscribeInvalidateTuple<T> = [Subscriber<T>, Invalidator<T>];
+
+export type EventsPromise<S> = {
+    subscribe: (run: Subscriber<S>) => Unsubscriber;
+    listen: (listener: (value: S) => void) => Unsubscriber;
+} & PromiseLike<S>;
+
+type Queued<T> = [SubscribeInvalidateTuple<T>, T];
+
+const writable = <T>(initial: T) => {
+    const subscriber_queue: Queued<T>[] = [];
+    let value = initial;
+    let stop: Unsubscriber | null = null;
+    const subscribers = new Set<SubscribeInvalidateTuple<T>>();
+    const set = (new_value: T): void => {
+        value = new_value;
+        if (stop) {
+            // store is ready
+            const run_queue = !subscriber_queue.length;
+            for (const subscriber of subscribers) {
+                subscriber[1]();
+                subscriber_queue.push([subscriber, value]);
+            }
+            if (run_queue) {
+                for (const sub of subscriber_queue) {
+                    sub[0][0](sub[1]);
+                }
+                subscriber_queue.length = 0;
+            }
+        }
+    };
+
+    const subscribe = (run: Subscriber<T>, invalidate: Invalidator<T> = () => {}): Unsubscriber => {
+        const subscriber: SubscribeInvalidateTuple<T> = [run, invalidate];
+        subscribers.add(subscriber);
+        if (subscribers.size === 1) {
+            stop = () => {};
+        }
+        run(value);
+        return () => {
+            subscribers.delete(subscriber);
+            if (subscribers.size === 0 && stop) {
+                stop();
+                stop = null;
+            }
+        };
+    };
+    return { set, subscribe };
+};
+
+export const EventsPromise = <S, D>(
+    initial: S,
+    onChange: ($: { state: S; data: Either<DecoderError, D> }) => S,
+    source: ReadableStream<Uint8Array>,
+    parse: (data: string) => Either<DecoderError, D>,
+) => {
+    let currentState = initial;
+    const state = writable(initial);
+    let resolve: (value: S) => void;
+    const promise = new Promise<S>((_resolve) => {
+        resolve = _resolve;
+    });
+    getBytes(
+        source,
+        getLines(
+            getMessages(($) => {
+                const data = parse($.data);
+                currentState = onChange({ state: currentState, data });
+                state.set(currentState);
+            }),
+        ),
+    ).then(() => resolve(currentState));
+    const returned: EventsPromise<S> = {
+        then: promise.then.bind(promise),
+        subscribe: (run) => state.subscribe(run),
+        listen: (listener): Unsubscriber => state.subscribe(listener),
+    };
+    return returned;
+};
+
+export const listen =
+    <S>(listener: (value: S) => void) =>
+    (promise: EventsPromise<S>) => {
+        promise.listen(listener);
+        return promise;
+    };
+
+export type OnChange<S, D> = ($: { state: S; data: Either<DecoderError, D> }) => S;
+export type SSEStateChange<S, D> = {
+    onChange: OnChange<S, D>;
+    initialState: S;
+};
+export type SSEStateChangeUnion<S, D extends Record<number, unknown>> = SSEStateChange<S, D[keyof D]>;
+export type SSEStateChangeObject<S, D extends Record<number, unknown>> = {
+    [K in keyof D]: SSEStateChange<S, D[K]>;
+};
+export type StateChange<S, D extends Record<number, unknown>> = SSEStateChangeUnion<S, D> | SSEStateChangeObject<S, D>;
+
+const decode =
+    <D>(decoder: Decoder<D>) =>
+    (source: ReadableStream<Uint8Array>) =>
+    <S>(onChange: ($: { state: S; data: Either<DecoderError, D> }) => S) =>
+    (initialState: S) =>
+        EventsPromise(initialState, onChange, source, ($) => {
+            const rawDecode = decoder.decode($);
+            if (rawDecode._tag === 'Right') {
+                return rawDecode;
+            }
+            const jsonObj = json.parse($);
+            if (jsonObj._tag === 'Right') {
+                return decoder.decode(jsonObj.right);
+            }
+            return rawDecode;
+        });
+
+export const decoder = <D>(entity: Decoder<D>) =>
+    D.createDecoder({
+        forceDecode: (input) => {
+            if (input instanceof ReadableStream) {
+                return decode(entity)(input);
+            }
+            throw new Error('Expected ReadableStream');
+        },
+    });
+"
+`;
+
 exports[`v3 should generate: test/generated/v3/index.ts 1`] = `
 "/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import { match, matchT } from './core/request';
-export const response = { match, matchT };
+export * as response from './core/response';
+export * as sse from './core/sse';
+
 export { HttpError } from './core/HttpError';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
@@ -5826,6 +6508,7 @@ exports[`v3 should generate: test/generated/v3/services/CollectionFormatService.
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -5866,6 +6549,7 @@ exports[`v3 should generate: test/generated/v3/services/ComplexService.ts 1`] = 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithArray } from '../models/ModelWithArray';
@@ -5945,6 +6629,7 @@ exports[`v3 should generate: test/generated/v3/services/DefaultService.ts 1`] = 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -5965,6 +6650,7 @@ exports[`v3 should generate: test/generated/v3/services/DefaultsService.ts 1`] =
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -6071,6 +6757,7 @@ exports[`v3 should generate: test/generated/v3/services/DeprecatedService.ts 1`]
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { DeprecatedModel } from '../models/DeprecatedModel';
@@ -6100,6 +6787,7 @@ exports[`v3 should generate: test/generated/v3/services/DescriptionsService.ts 1
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6143,6 +6831,7 @@ exports[`v3 should generate: test/generated/v3/services/DuplicateService.ts 1`] 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6181,6 +6870,7 @@ exports[`v3 should generate: test/generated/v3/services/ErrorService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6216,6 +6906,7 @@ exports[`v3 should generate: test/generated/v3/services/FormDataService.ts 1`] =
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -6249,6 +6940,7 @@ exports[`v3 should generate: test/generated/v3/services/HeaderService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6275,6 +6967,7 @@ exports[`v3 should generate: test/generated/v3/services/MultipartService.ts 1`] 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -6335,6 +7028,7 @@ exports[`v3 should generate: test/generated/v3/services/MultipleTags1Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6367,6 +7061,7 @@ exports[`v3 should generate: test/generated/v3/services/MultipleTags2Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6399,6 +7094,7 @@ exports[`v3 should generate: test/generated/v3/services/MultipleTags3Service.ts 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6422,6 +7118,7 @@ exports[`v3 should generate: test/generated/v3/services/NoContentService.ts 1`] 
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6445,6 +7142,7 @@ exports[`v3 should generate: test/generated/v3/services/ParametersService.ts 1`]
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -6582,6 +7280,7 @@ exports[`v3 should generate: test/generated/v3/services/RequestBodyService.ts 1`
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelWithString } from '../models/ModelWithString';
@@ -6615,6 +7314,7 @@ exports[`v3 should generate: test/generated/v3/services/ResponseService.ts 1`] =
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { ModelThatExtends } from '../models/ModelThatExtends';
@@ -6674,6 +7374,7 @@ exports[`v3 should generate: test/generated/v3/services/SimpleService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6730,6 +7431,7 @@ exports[`v3 should generate: test/generated/v3/services/TypesService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
@@ -6787,6 +7489,7 @@ exports[`v3 should generate: test/generated/v3/services/UploadService.ts 1`] = `
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
 import { option } from 'fp-ts';
 import { OpenAPI } from '../core/OpenAPI';
