@@ -2,7 +2,7 @@
 
 import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
-import { option } from 'fp-ts';
+import * as option from 'fp-ts/lib/Option';
 {{#if imports}}
 {{#each imports}}
 import { {{{this}}} } from '../models/{{{this}}}';
@@ -16,6 +16,16 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 {{/if}}
 
+{{#each operations}}
+
+{{#if parameters}}
+{{#each parameters}}
+const {{{../name}}}__{{{name}}}__decoder = {{>type}};
+type {{{../name}}}__{{{name}}}__type = D.Output<typeof {{{../name}}}__{{{name}}}__decoder>;
+{{/each}}
+{{/if}}
+{{/each}}
+
 export class {{{name}}}{{{@root.postfix}}} {
 	{{#if @root.exportClient}}
 
@@ -23,20 +33,6 @@ export class {{{name}}}{{{@root.postfix}}} {
 	{{/if}}
 
 	{{#each operations}}
-
-	{{#if parameters}}
-	private {{#unless @root.exportClient}}static {{/unless}}{{{name}}}Decoder = D.object({
-	{{#if @root.useOptions~}}
-	{{#each parameters}}
-	{{{name}}}: {{#>isRequired}}{{>type}}{{/isRequired}},
-	{{/each}}
-	{{~else}}
-	{{#each parameters}}
-	{{{name}}}: {{#unless isRequired}}{{#unless default}}D.optional({{>type}}){{else}}{{>type}}{{/unless}}{{else}}{{>type}}{{/unless}},
-	{{/each}}
-	{{/if}}
-	});
-	{{/if}}
 
 	{{#if @root.exportClient}}
 	public {{{name}}}({{>parameters}}) {

@@ -6510,23 +6510,26 @@ exports[`v3 should generate: test/generated/v3/services/CollectionFormatService.
 /* eslint-disable */
 import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
-import { option } from 'fp-ts';
+import * as option from 'fp-ts/lib/Option';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
+const collectionFormat__parameterArrayCsv__decoder = D.nullable(D.array(D.string));
+type collectionFormat__parameterArrayCsv__type = D.Output<typeof collectionFormat__parameterArrayCsv__decoder>;
+const collectionFormat__parameterArraySsv__decoder = D.nullable(D.array(D.string));
+type collectionFormat__parameterArraySsv__type = D.Output<typeof collectionFormat__parameterArraySsv__decoder>;
+const collectionFormat__parameterArrayTsv__decoder = D.nullable(D.array(D.string));
+type collectionFormat__parameterArrayTsv__type = D.Output<typeof collectionFormat__parameterArrayTsv__decoder>;
+const collectionFormat__parameterArrayPipes__decoder = D.nullable(D.array(D.string));
+type collectionFormat__parameterArrayPipes__type = D.Output<typeof collectionFormat__parameterArrayPipes__decoder>;
+const collectionFormat__parameterArrayMulti__decoder = D.nullable(D.array(D.string));
+type collectionFormat__parameterArrayMulti__type = D.Output<typeof collectionFormat__parameterArrayMulti__decoder>;
 export class CollectionFormatService {
-    private static collectionFormatDecoder = D.object({
-        parameterArrayCsv: D.nullable(D.array(D.string)),
-        parameterArraySsv: D.nullable(D.array(D.string)),
-        parameterArrayTsv: D.nullable(D.array(D.string)),
-        parameterArrayPipes: D.nullable(D.array(D.string)),
-        parameterArrayMulti: D.nullable(D.array(D.string)),
-    });
     public static collectionFormat(
-        parameterArrayCsv: D.Output<typeof this.collectionFormatDecoder>['parameterArrayCsv'],
-        parameterArraySsv: D.Output<typeof this.collectionFormatDecoder>['parameterArraySsv'],
-        parameterArrayTsv: D.Output<typeof this.collectionFormatDecoder>['parameterArrayTsv'],
-        parameterArrayPipes: D.Output<typeof this.collectionFormatDecoder>['parameterArrayPipes'],
-        parameterArrayMulti: D.Output<typeof this.collectionFormatDecoder>['parameterArrayMulti'],
+        parameterArrayCsv: collectionFormat__parameterArrayCsv__type,
+        parameterArraySsv: collectionFormat__parameterArraySsv__type,
+        parameterArrayTsv: collectionFormat__parameterArrayTsv__type,
+        parameterArrayPipes: collectionFormat__parameterArrayPipes__type,
+        parameterArrayMulti: collectionFormat__parameterArrayMulti__type,
     ) {
         return __request(OpenAPI, {
             method: 'GET',

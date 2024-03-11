@@ -7,11 +7,23 @@
 	{{~#unless isRequired}} = option.none{{/unless~}}
 {{~/if}},
 {{/each}}
-}: D.Output<typeof this.{{{name}}}Decoder>
+}: {
+{{#each parameters}}
+{{{name}}}{{#if default}}?: option.Option<{{{../name}}}__{{{name}}}__type>
+{{~else~}}
+	{{~#unless isRequired}}?: option.Option<{{{../name}}}__{{{name}}}__type>
+	{{~else~}}: {{{../name}}}__{{{name}}}__type{{/unless~}}
+{{~/if}},
+{{/each}}
+}
 {{~else}}
 
 {{#each parameters}}
-{{{name}}}: D.Output<typeof this.{{{../name}}}Decoder>['{{{name}}}']{{#if default}} = {{{default}}}
+{{{name}}}{{#if default}}?: option.Option<{{{../name}}}__{{{name}}}__type>
+{{~else~}}
+	{{~#unless isRequired}}?: option.Option<{{{../name}}}__{{{name}}}__type>
+	{{~else~}}: {{{../name}}}__{{{name}}}__type{{/unless~}}
+{{~/if}}{{#if default}} = {{{default}}}
 	{{~else~}}
 	{{~#unless isRequired}} = option.none{{/unless~}}
 {{~/if}},
