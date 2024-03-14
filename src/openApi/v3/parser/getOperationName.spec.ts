@@ -23,5 +23,6 @@ describe('getOperationName', () => {
     expect(getOperationName('/api/v{api-version}/users', 'GET', '_foo.bar')).toEqual('fooBar');
     expect(getOperationName('/api/v{api-version}/users', 'GET', '-foo.bar')).toEqual('fooBar');
     expect(getOperationName('/api/v{api-version}/users', 'GET', '123.foo.bar')).toEqual('fooBar');
+    expect(getOperationName('/api/v{api-version}/users', 'GET', 'fooBar12')).toEqual('fooBar');
   });
 });
