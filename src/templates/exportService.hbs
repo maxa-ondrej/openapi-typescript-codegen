@@ -18,7 +18,7 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 {{/if}}
 
-const toUndefined = flow(
+const toUndefined = (data: unknown) => pipe(
 	D.oneOf(
 		D.object({
 			'_tag': D.literal('None')
@@ -27,8 +27,9 @@ const toUndefined = flow(
 			'_tag': D.literal('Some'),
 			'value': D.unknown
 		})
-	).andThen(option.toUndefined).decode,
-	either.getOrElse(() => undefined),
+	).decode(data),
+	option.toUndefined,
+	either.getOrElse(() => data),
 );
 
 {{#each operations}}
