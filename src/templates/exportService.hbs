@@ -2,6 +2,8 @@
 
 import * as SSE from '../core/sse';
 import * as D from '@majkit/fp-ts-schema';
+import { flow } from 'fp-ts/lib/functions';
+import * as either from 'fp-ts/lib/Either';
 import * as option from 'fp-ts/lib/Option';
 {{#if imports}}
 {{#each imports}}
@@ -15,6 +17,19 @@ import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 {{/if}}
+
+const toUndefined = flow(
+	D.oneOf(
+		D.object({
+			'_tag': D.literal('None')
+		}),
+		D.object({
+			'_tag': D.literal('Some'),
+			'value': D.unknown
+		})
+	).andThen(option.toUndefined).decode,
+	either.getOrElse(() => undefined),
+);
 
 {{#each operations}}
 
@@ -56,35 +71,35 @@ export class {{{name}}}{{{@root.postfix}}} {
 			{{#if parametersPath}}
 			path: {
 				{{#each parametersPath}}
-				'{{{prop}}}': {{{name}}},
+				'{{{prop}}}': toUndefined({{{name}}}),
 				{{/each}}
 			},
 			{{/if}}
 			{{#if parametersCookie}}
 			cookies: {
 				{{#each parametersCookie}}
-				'{{{prop}}}': {{{name}}},
+				'{{{prop}}}': toUndefined({{{name}}}),
 				{{/each}}
 			},
 			{{/if}}
 			{{#if parametersHeader}}
 			headers: {
 				{{#each parametersHeader}}
-				'{{{prop}}}': {{{name}}},
+				'{{{prop}}}': toUndefined({{{name}}}),
 				{{/each}}
 			},
 			{{/if}}
 			{{#if parametersQuery}}
 			query: {
 				{{#each parametersQuery}}
-				'{{{prop}}}': {{{name}}},
+				'{{{prop}}}': toUndefined({{{name}}}),
 				{{/each}}
 			},
 			{{/if}}
 			{{#if parametersForm}}
 			formData: {
 				{{#each parametersForm}}
-				'{{{prop}}}': {{{name}}},
+				'{{{prop}}}': toUndefined({{{name}}}),
 				{{/each}}
 			},
 			{{/if}}
