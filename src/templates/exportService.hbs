@@ -28,7 +28,7 @@ const toUndefined = (data: unknown) => pipe(
 			'value': D.unknown
 		})
 	).decode(data),
-	option.toUndefined,
+    either.map(option.toUndefined),
 	either.getOrElse(() => data),
 );
 
